@@ -16,7 +16,7 @@ export function Navbar() {
    const [searchQuery, setSearchQuery] = useState("");
    
    return (
-      <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
          <div className="container mx-auto px-4">
             <div className="flex h-16 items-center justify-between gap-4">
                {/* Logo and Site Name - Hidden when search is open on mobile */}
