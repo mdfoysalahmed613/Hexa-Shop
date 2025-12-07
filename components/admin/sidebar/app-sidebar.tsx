@@ -1,5 +1,5 @@
-import { Calendar, Hexagon, Home, Inbox, Search, Settings, Store } from 'lucide-react'
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '../../ui/sidebar'
+import { Calendar, Hexagon, Home, Inbox, Search, Settings } from 'lucide-react'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '../../ui/sidebar'
 import Link from 'next/link'
 import FooterUser from './footer-user'
 

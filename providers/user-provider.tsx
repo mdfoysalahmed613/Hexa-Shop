@@ -30,6 +30,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
          setIsLoading(false);
       }
    };
+   console.log("UserProvider render, current user:", user);
 
    useEffect(() => {
       let mounted = true;

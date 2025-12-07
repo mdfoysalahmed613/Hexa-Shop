@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import logo from "@/assets/common/logo.png";
-import { ShoppingCart, User, Search, X, Hexagon } from "lucide-react";
-import { Suspense, useState } from "react";
+import { ShoppingCart, Search, X, Hexagon } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import AuthButton from "../auth/auth-button";
 
