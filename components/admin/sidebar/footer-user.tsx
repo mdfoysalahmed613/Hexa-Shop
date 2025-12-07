@@ -13,6 +13,7 @@ import {
    SidebarMenu,
    SidebarMenuButton,
    SidebarMenuItem,
+   SidebarMenuSkeleton,
    useSidebar,
 } from "@/components/ui/sidebar"
 import { EllipsisVertical, User } from 'lucide-react'
@@ -25,7 +26,17 @@ import { LogoutMenuItem } from '@/components/ui/logout-menu-item'
 const FooterUser = () => {
    const [isDialogOpen, setIsDialogOpen] = useState(false)
    const { isMobile } = useSidebar()
-   const { user, refreshUser } = useUser();
+   const { user, refreshUser, isLoading } = useUser();
+
+   if (isLoading) {
+      return (
+         <SidebarMenu>
+            <SidebarMenuItem>
+               <SidebarMenuSkeleton className="px-3 py-6" />
+            </SidebarMenuItem>
+         </SidebarMenu>
+      )
+   }
 
    if (!user) return null;
    return (
@@ -33,7 +44,7 @@ const FooterUser = () => {
          <SidebarMenu>
             <SidebarMenuItem>
                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                  <DropdownMenuTrigger asChild >
                      <SidebarMenuButton
                         size="lg"
                         className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
