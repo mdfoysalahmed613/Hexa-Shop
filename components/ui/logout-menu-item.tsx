@@ -11,7 +11,7 @@ export function LogoutMenuItem() {
 
    const handleLogout = async () => {
       await supabase.auth.signOut();
-      router.push("/auth?tab=login");
+      router.push("/auth");
    };
 
    return (

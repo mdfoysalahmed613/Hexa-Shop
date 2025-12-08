@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth/admin-guard";
+
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/admin/sidebar/app-sidebar";
@@ -7,7 +7,6 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
-   await requireAdmin();
    return (
       <SidebarProvider>
          <AppSidebar />
@@ -21,7 +20,7 @@ const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
                   />
                   <DynamicBreadcrumb />
                </div>
-               <Link href="/" className="flex gap-2 items-center justify-center hover:bg-accent m-2 rounded-md p-2">
+               <Link href="/" className="flex gap-2 text-sm items-center justify-center hover:bg-accent m-2 rounded-md p-2">
                   <ArrowLeft className="h-4 w-4" />
                   <span>Back to Store</span>
                </Link>
