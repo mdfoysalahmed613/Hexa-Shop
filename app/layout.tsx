@@ -7,7 +7,7 @@ import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL!),
+  metadataBase: new URL("https://hexashop.foysal.me"),
   title: "Hexa Shop - Premium Essentials for the Modern Man",
   description: "Discover curated menswear and accessories crafted with premium materials and timeless design. Hexa Shop offers shirt, pants, wallets, and everyday essentials built to elevate your style and confidence.",
 };
