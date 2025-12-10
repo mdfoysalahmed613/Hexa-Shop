@@ -58,7 +58,7 @@ export const SignUpForm = () => {
           <CardDescription>Create a new account</CardDescription>
         </CardHeader>
         <CardContent>
-          <GoogleAuthButton onError={(msg) => setError(msg)} text="Continue with Google" />
+          <GoogleAuthButton onError={(msg) => setError(msg)} />
           <div className="my-4 flex items-center gap-2">
             <hr className="flex-1 border-t border-muted-foreground/20" />
             <span className="text-sm text-muted-foreground">or</span>
