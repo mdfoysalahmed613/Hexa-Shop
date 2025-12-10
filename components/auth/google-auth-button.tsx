@@ -3,16 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 
 type GoogleAuthButtonProps = {
-   className?: string;
-   text?: string;
    onError?: (message: string) => void;
 };
 
-export function GoogleAuthButton({ className, text = "Continue with Google", onError }: GoogleAuthButtonProps) {
+export function GoogleAuthButton({ onError }: GoogleAuthButtonProps) {
    const [isLoading, setIsLoading] = useState(false);
    const searchParams = useSearchParams();
    const redirect = searchParams.get("redirect") || "/";
@@ -40,7 +37,7 @@ export function GoogleAuthButton({ className, text = "Continue with Google", onE
       <Button
          variant="outline"
          type="button"
-         className={cn("w-full gap-2", className)}
+         className="w-full gap-2"
          onClick={handleGoogleLogin}
          disabled={isLoading}
       >
@@ -69,7 +66,7 @@ export function GoogleAuthButton({ className, text = "Continue with Google", onE
                d="M43.611 20.083H42V20H24v8h11.303c-.793 2.237-2.244 4.166-4.075 5.556l5.972 5.059C36.843 39.168 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"
             />
          </svg>
-         {isLoading ? "Signing in with Google..." : text}
+         {isLoading ? "Signing in with Google..." : "Continue with Google"}
       </Button>
    );
 }
