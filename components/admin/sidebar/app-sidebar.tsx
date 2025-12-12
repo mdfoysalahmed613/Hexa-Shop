@@ -76,6 +76,11 @@ const mainNavItems = [
     icon: BarChart3,
     href: "/admin/analytics",
   },
+  {
+    title: "Users Management",
+    icon: Users,
+    href: "/admin/users",
+  }
 ];
 
 const settingsNavItems = [
