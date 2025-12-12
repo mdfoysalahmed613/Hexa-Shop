@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { HeroImage } from "@/assets/common";
-import { CategorySection } from "./category-section"; export function HeroSection() {
+export function HeroSection() {
    return (
       <section className="relative w-full">
          {/* Main Hero */}
@@ -71,41 +71,7 @@ import { CategorySection } from "./category-section"; export function HeroSectio
                </div>
             </div>
          </div>
-
-         {/* Category Cards */}
-         <CategorySection />
-
-         {/* Features Banner */}
-         <div className="border-t border-border">
-            <div className="container mx-auto px-4 py-8">
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-                  <div className="space-y-1">
-                     <div className="font-semibold">Free Shipping</div>
-                     <div className="text-sm text-muted-foreground">
-                        On orders over $50
-                     </div>
-                  </div>
-                  <div className="space-y-1">
-                     <div className="font-semibold">Easy Returns</div>
-                     <div className="text-sm text-muted-foreground">
-                        30-day return policy
-                     </div>
-                  </div>
-                  <div className="space-y-1">
-                     <div className="font-semibold">Premium Quality</div>
-                     <div className="text-sm text-muted-foreground">
-                        Handpicked materials
-                     </div>
-                  </div>
-                  <div className="space-y-1">
-                     <div className="font-semibold">Secure Payment</div>
-                     <div className="text-sm text-muted-foreground">
-                        100% protected
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </div>
+         
       </section>
    );
 }

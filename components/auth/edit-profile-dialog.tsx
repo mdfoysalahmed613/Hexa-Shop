@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -14,6 +14,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 interface EditProfileDialogProps {
@@ -23,18 +30,45 @@ interface EditProfileDialogProps {
    onUpdate: () => void;
 }
 
-export function EditProfileDialog({
-   open,
-   onOpenChange,
-   user,
-   onUpdate,
-}: EditProfileDialogProps) {
+export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditProfileDialogProps) {
    const [isLoading, setIsLoading] = useState(false);
    const [formData, setFormData] = useState({
       fullName: user.user_metadata?.full_name || "",
-      phone: user.phone || "",
+      phone: "",
       avatarUrl: user.user_metadata?.avatar_url || "",
+      age: "",
+      gender: "",
    });
+
+   useEffect(() => {
+      if (!open) return;
+
+      const loadProfile = async () => {
+         const supabase = createClient();
+         const { data, error } = await supabase
+            .from("profiles")
+            .select("name, photo_url, phone, age, gender")
+            .eq("id", user.id)
+            .single();
+
+         if (error) {
+            console.error(error);
+            return;
+         }
+
+         if (data) {
+            setFormData({
+               fullName: data.name || user.user_metadata?.full_name || "",
+               phone: data.phone || "",
+               avatarUrl: data.photo_url || user.user_metadata?.avatar_url || "",
+               age: data.age?.toString() || "",
+               gender: data.gender || "",
+            });
+         }
+      };
+
+      void loadProfile();
+   }, [open, user.id, user.user_metadata?.avatar_url, user.user_metadata?.full_name]);
 
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -42,16 +76,20 @@ export function EditProfileDialog({
 
       try {
          const supabase = createClient();
-         const { error } = await supabase.auth.updateUser({
-            data: {
-               full_name: formData.fullName,
-               avatar_url: formData.avatarUrl,
-            },
-            phone: formData.phone || undefined,
+         const ageValue = formData.age ? Number(formData.age) : null;
+         const { error } = await supabase.from("profiles").upsert({
+            id: user.id,
+            name: formData.fullName,
+            photo_url: formData.avatarUrl,
+            phone: formData.phone,
+            age: Number.isNaN(ageValue) ? null : ageValue,
+            gender: formData.gender || null,
          });
 
-         if (error) throw error;
-
+         if (error) {
+            console.error(error);
+            throw error;
+         }
          toast.success("Profile updated successfully");
          onUpdate();
          onOpenChange(false);
@@ -112,6 +150,38 @@ export function EditProfileDialog({
                            setFormData({ ...formData, phone: e.target.value })
                         }
                      />
+                  </div>
+                  <div className="grid gap-2">
+                     <Label htmlFor="age">Age</Label>
+                     <Input
+                        id="age"
+                        type="number"
+                        min={0}
+                        max={120}
+                        placeholder="Optional"
+                        value={formData.age}
+                        onChange={(e) =>
+                           setFormData({ ...formData, age: e.target.value })
+                        }
+                     />
+                  </div>
+                  <div className="grid gap-2">
+                     <Label htmlFor="gender">Gender</Label>
+                     <Select
+                        value={formData.gender}
+                        onValueChange={(value) =>
+                           setFormData({ ...formData, gender: value })
+                        }
+                     >
+                        <SelectTrigger className="w-full">
+                           <SelectValue placeholder="Prefer not to say" />
+                        </SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="male">Male</SelectItem>
+                           <SelectItem value="female">Female</SelectItem>
+                           <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                     </Select>
                   </div>
                   <div className="grid gap-2">
                      <Label htmlFor="avatarUrl">Avatar URL</Label>
