@@ -2,7 +2,7 @@ import { CategorySection } from "@/components/home/category-section";
 import { HeroSection } from "@/components/home/hero-section";
 import Practice from "@/components/home/practice";
 
-export default function Home() {
+export default function HomePage() {
   return (
     <main className="min-h-screen">
       <HeroSection />
