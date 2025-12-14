@@ -24,7 +24,7 @@ import {
 import { toast } from "sonner";
 import Image from "next/image";
 import { DefaultAvatar } from "@/assets/common";
-import { Camera, Trash2, Upload } from "lucide-react";
+import { Trash2, Upload } from "lucide-react";
 
 interface EditProfileDialogProps {
    open: boolean;
@@ -38,15 +38,17 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
    const [isUploading, setIsUploading] = useState(false);
    const fileInputRef = useRef<HTMLInputElement>(null);
    const [formData, setFormData] = useState({
-      fullName: user.user_metadata?.full_name || "",
+      fullName: "",
       phone: "",
-      avatarUrl: user.user_metadata?.avatar_url || "",
+      avatarUrl: "",
       age: "",
       gender: "",
    });
 
    useEffect(() => {
       if (!open) return;
+
+      let isMounted = true;
 
       const loadProfile = async () => {
          const supabase = createClient();
@@ -56,14 +58,17 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
             .eq("id", user.id)
             .single();
 
+         if (!isMounted) return;
+
          if (error) {
             console.error(error);
+            toast.error("Failed to load profile data");
             return;
          }
 
          if (data) {
             setFormData({
-               fullName: data.name || user.user_metadata?.full_name || "",
+               fullName: data.name || "",
                phone: data.phone || "",
                avatarUrl: data.photo_url || "",
                age: data.age?.toString() || "",
@@ -73,7 +78,11 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
       };
 
       void loadProfile();
-   }, [open, user.id, user.user_metadata?.avatar_url, user.user_metadata?.full_name]);
+
+      return () => {
+         isMounted = false;
+      };
+   }, [open, user.id]);
 
    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -118,7 +127,7 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
             .from("avatars")
             .getPublicUrl(filePath);
 
-         setFormData({ ...formData, avatarUrl: urlData.publicUrl });
+         setFormData((prev) => ({ ...prev, avatarUrl: urlData.publicUrl }));
          toast.success("Avatar uploaded successfully");
       } catch (error) {
          console.error(error);
@@ -140,21 +149,23 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
       setIsUploading(true);
       try {
          const supabase = createClient();
-         // Extract file path from URL
+         // Extract file path from URL - the file is stored as "avatars/filename"
          const urlParts = formData.avatarUrl.split("/");
          const fileName = urlParts[urlParts.length - 1];
 
          if (fileName && formData.avatarUrl.includes("avatars")) {
+            // Note: files are stored at "avatars/filename" path in the bucket
             const { error } = await supabase.storage
                .from("avatars")
                .remove([`avatars/${fileName}`]);
 
             if (error) {
                console.error("Storage delete error:", error);
+               // Don't throw - still allow removing the URL from profile
             }
          }
 
-         setFormData({ ...formData, avatarUrl: "" });
+         setFormData((prev) => ({ ...prev, avatarUrl: "" }));
          toast.success("Avatar removed");
       } catch (error) {
          console.error(error);
@@ -240,6 +251,7 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
                            onChange={handleAvatarUpload}
                            className="hidden"
                            id="avatar-upload"
+                           aria-label="Upload avatar image"
                         />
                         <Button
                            type="button"
@@ -330,7 +342,7 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
                            }
                         >
                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Prefer not to say" />
+                              <SelectValue placeholder="Select gender" />
                            </SelectTrigger>
                            <SelectContent>
                               <SelectItem value="male">Male</SelectItem>
