@@ -46,7 +46,7 @@
 :root {
   --background: #faf9f5;
   --foreground: #3d3929;
-  --card: #faf9f5;
+  --card: #f5f4ee;
   --card-foreground: #141413;
   --popover: #ffffff;
   --popover-foreground: #28261b;
@@ -58,7 +58,7 @@
   --muted-foreground: #83827d;
   --accent: #e9e6dc;
   --accent-foreground: #28261b;
-  --destructive: #141413;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #dad9d4;
   --input: #b4b2a7;

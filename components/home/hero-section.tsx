@@ -57,13 +57,16 @@ export function HeroSection() {
                </div>
 
                {/* Right Content - Hero Image */}
-               <div className="relative aspect-square lg:aspect-auto lg:h-[600px]">
-                  <div className="relative w-full h-full rounded-2xl overflow-hidden">
+               <div className="relative flex justify-center lg:justify-end items-center">
+                  {/* Decorative Background Bubble */}
+                  <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/10 rounded-full blur-3xl" />
+
+                  <div className="relative w-full max-w-[450px] lg:max-w-[600px] aspect-square rounded-full overflow-hidden border-8 border-background ring-1 ring-border/20">
                      <Image
                         src={HeroImage}
                         alt="Men's Fashion Collection"
                         fill
-                        className="object-cover"
+                        className="object-cover object-top"
                         priority
                         sizes="(max-width: 768px) 100vw, 50vw"
                      />
@@ -71,7 +74,7 @@ export function HeroSection() {
                </div>
             </div>
          </div>
-         
+
       </section>
    );
 }

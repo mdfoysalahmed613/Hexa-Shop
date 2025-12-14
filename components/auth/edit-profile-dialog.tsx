@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -22,6 +22,9 @@ import {
    SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import Image from "next/image";
+import { DefaultAvatar } from "@/assets/common";
+import { Camera, Trash2, Upload } from "lucide-react";
 
 interface EditProfileDialogProps {
    open: boolean;
@@ -32,6 +35,8 @@ interface EditProfileDialogProps {
 
 export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditProfileDialogProps) {
    const [isLoading, setIsLoading] = useState(false);
+   const [isUploading, setIsUploading] = useState(false);
+   const fileInputRef = useRef<HTMLInputElement>(null);
    const [formData, setFormData] = useState({
       fullName: user.user_metadata?.full_name || "",
       phone: "",
@@ -60,7 +65,7 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
             setFormData({
                fullName: data.name || user.user_metadata?.full_name || "",
                phone: data.phone || "",
-               avatarUrl: data.photo_url || user.user_metadata?.avatar_url || "",
+               avatarUrl: data.photo_url || "",
                age: data.age?.toString() || "",
                gender: data.gender || "",
             });
@@ -69,6 +74,97 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
 
       void loadProfile();
    }, [open, user.id, user.user_metadata?.avatar_url, user.user_metadata?.full_name]);
+
+   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+         toast.error("Please select an image file");
+         return;
+      }
+
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+         toast.error("Image size must be less than 2MB");
+         return;
+      }
+
+      setIsUploading(true);
+      try {
+         const supabase = createClient();
+         const fileExt = file.name.split(".").pop();
+         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+         const filePath = `avatars/${fileName}`;
+
+         // Delete old avatar if exists
+         if (formData.avatarUrl) {
+            const oldPath = formData.avatarUrl.split("/").pop();
+            if (oldPath) {
+               await supabase.storage.from("avatars").remove([`avatars/${oldPath}`]);
+            }
+         }
+
+         // Upload new avatar
+         const { error: uploadError } = await supabase.storage
+            .from("avatars")
+            .upload(filePath, file);
+
+         if (uploadError) throw uploadError;
+
+         // Get public URL
+         const { data: urlData } = supabase.storage
+            .from("avatars")
+            .getPublicUrl(filePath);
+
+         setFormData({ ...formData, avatarUrl: urlData.publicUrl });
+         toast.success("Avatar uploaded successfully");
+      } catch (error) {
+         console.error(error);
+         toast.error(
+            error instanceof Error ? error.message : "Failed to upload avatar"
+         );
+      } finally {
+         setIsUploading(false);
+         // Reset input
+         if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+         }
+      }
+   };
+
+   const handleAvatarDelete = async () => {
+      if (!formData.avatarUrl) return;
+
+      setIsUploading(true);
+      try {
+         const supabase = createClient();
+         // Extract file path from URL
+         const urlParts = formData.avatarUrl.split("/");
+         const fileName = urlParts[urlParts.length - 1];
+
+         if (fileName && formData.avatarUrl.includes("avatars")) {
+            const { error } = await supabase.storage
+               .from("avatars")
+               .remove([`avatars/${fileName}`]);
+
+            if (error) {
+               console.error("Storage delete error:", error);
+            }
+         }
+
+         setFormData({ ...formData, avatarUrl: "" });
+         toast.success("Avatar removed");
+      } catch (error) {
+         console.error(error);
+         toast.error(
+            error instanceof Error ? error.message : "Failed to remove avatar"
+         );
+      } finally {
+         setIsUploading(false);
+      }
+   };
 
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -114,6 +210,64 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
             </DialogHeader>
             <form onSubmit={handleSubmit}>
                <div className="grid gap-4 py-4">
+                  {/* Avatar Section */}
+                  <div className="flex flex-col items-center gap-3">
+                     <div className="relative">
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-muted">
+                           {formData.avatarUrl ? (
+                              <Image
+                                 src={formData.avatarUrl}
+                                 alt="Avatar"
+                                 width={96}
+                                 height={96}
+                                 className="w-full h-full object-cover"
+                              />
+                           ) : (
+                              <DefaultAvatar size={96} />
+                           )}
+                        </div>
+                        {isUploading && (
+                           <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                           </div>
+                        )}
+                     </div>
+                     <div className="flex gap-2">
+                        <input
+                           ref={fileInputRef}
+                           type="file"
+                           accept="image/*"
+                           onChange={handleAvatarUpload}
+                           className="hidden"
+                           id="avatar-upload"
+                        />
+                        <Button
+                           type="button"
+                           variant="outline"
+                           size="sm"
+                           disabled={isUploading}
+                           onClick={() => fileInputRef.current?.click()}
+                        >
+                           <Upload className="w-4 h-4 mr-2" />
+                           {formData.avatarUrl ? "Change" : "Upload"}
+                        </Button>
+                        {formData.avatarUrl && (
+                           <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={isUploading}
+                              onClick={handleAvatarDelete}
+                           >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Remove
+                           </Button>
+                        )}
+                     </div>
+                     <p className="text-xs text-muted-foreground">
+                        Max file size: 2MB. Supported formats: JPG, PNG, GIF
+                     </p>
+                  </div>
                   <div className="grid gap-2">
                      <Label htmlFor="email">Email</Label>
                      <Input
@@ -151,52 +305,40 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
                         }
                      />
                   </div>
-                  <div className="grid gap-2">
-                     <Label htmlFor="age">Age</Label>
-                     <Input
-                        id="age"
-                        type="number"
-                        min={0}
-                        max={120}
-                        placeholder="Optional"
-                        value={formData.age}
-                        onChange={(e) =>
-                           setFormData({ ...formData, age: e.target.value })
-                        }
-                     />
-                  </div>
-                  <div className="grid gap-2">
-                     <Label htmlFor="gender">Gender</Label>
-                     <Select
-                        value={formData.gender}
-                        onValueChange={(value) =>
-                           setFormData({ ...formData, gender: value })
-                        }
-                     >
-                        <SelectTrigger className="w-full">
-                           <SelectValue placeholder="Prefer not to say" />
-                        </SelectTrigger>
-                        <SelectContent>
-                           <SelectItem value="male">Male</SelectItem>
-                           <SelectItem value="female">Female</SelectItem>
-                           <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                     </Select>
-                  </div>
-                  <div className="grid gap-2">
-                     <Label htmlFor="avatarUrl">Avatar URL</Label>
-                     <Input
-                        id="avatarUrl"
-                        type="url"
-                        placeholder="https://example.com/avatar.jpg"
-                        value={formData.avatarUrl}
-                        onChange={(e) =>
-                           setFormData({ ...formData, avatarUrl: e.target.value })
-                        }
-                     />
-                     <p className="text-xs text-muted-foreground">
-                        Enter a URL for your profile picture
-                     </p>
+                  <div className="flex gap-2">
+                     <div className="grid gap-2 w-full">
+                        <Label htmlFor="age">Age</Label>
+                        <Input
+                           id="age"
+                           type="number"
+                           min={10}
+                           max={120}
+                           placeholder="Optional"
+                           value={formData.age}
+                           onChange={(e) =>
+                              setFormData({ ...formData, age: e.target.value })
+                           }
+                        />
+
+                     </div>
+                     <div className="grid gap-2 w-full">
+                        <Label htmlFor="gender">Gender</Label>
+                        <Select
+                           value={formData.gender}
+                           onValueChange={(value) =>
+                              setFormData({ ...formData, gender: value })
+                           }
+                        >
+                           <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Prefer not to say" />
+                           </SelectTrigger>
+                           <SelectContent>
+                              <SelectItem value="male">Male</SelectItem>
+                              <SelectItem value="female">Female</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                           </SelectContent>
+                        </Select>
+                     </div>
                   </div>
                </div>
                <DialogFooter>

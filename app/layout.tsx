@@ -36,7 +36,7 @@ export default async function RootLayout({
         >
           <UserProvider initialUser={user}>
             {children}
-            <Toaster />
+            <Toaster position="top-center" richColors />
           </UserProvider>
         </ThemeProvider>
       </body>

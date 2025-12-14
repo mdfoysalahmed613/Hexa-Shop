@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { PantImage, ShirtImage, ShoeImage, TShirtsImage, WatchImage } from "@/assets/common";
+import { PantImage, ShirtImage, ShoeImage, TShirtsImage, WatchImage } from "@/assets/category";
 
 const categories = [
    {
