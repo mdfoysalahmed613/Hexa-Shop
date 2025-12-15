@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { DataTable } from './data-table'
 import { columns } from './columns'
+import { adminAuthClient } from '@/lib/supabase/supabase-admin'
 
 export type Profile = {
    age: number | null
@@ -15,15 +16,14 @@ export type Profile = {
 }
 
 const UserManagementPage = async () => {
-   const supabase = await createClient();
-   const { data, error } = await supabase.from('profiles').select('*');
-   console.log(data);
+   const { data : {users},error } = await adminAuthClient.listUsers();
+   console.log(users);
    if(error) {
       console.error(error);
    }
    return (
-      <div className="container mx-auto py-10">
-         <DataTable columns={columns} data={data} />
+      <div className="mx-auto py-10">
+         {/* <DataTable columns={columns} data={data} /> */}
       </div>
    )
 }

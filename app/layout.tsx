@@ -4,7 +4,6 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { UserProvider } from "@/providers/user-provider";
 import "./globals.css";
-import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://hexashop.foysal.me"),
@@ -18,13 +17,11 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const { data: {user} } = await supabase.auth.getUser()
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
@@ -34,7 +31,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <UserProvider initialUser={user}>
+          <UserProvider>
             {children}
             <Toaster position="top-center" richColors />
           </UserProvider>
