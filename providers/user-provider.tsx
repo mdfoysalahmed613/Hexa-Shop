@@ -20,7 +20,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const checkInitialSession = async () => {
          const { data: { user } } = await supabase.auth.getUser();
          setUser(user);
-         setIsLoading(false); // <--- Set loading to false AFTER initial check
+         setIsLoading(false);
       };
       checkInitialSession();
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
