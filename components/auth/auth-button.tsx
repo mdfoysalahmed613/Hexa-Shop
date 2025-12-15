@@ -21,10 +21,14 @@ import { EditProfileDialog } from "./edit-profile-dialog";
 import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { LogoutMenuItem } from "@/components/ui/logout-menu-item";
+import { Skeleton } from "../ui/skeleton";
 
 export default function AuthButton() {
-   const { user, refreshUser } = useUser();
+   const { user, isLoading } = useUser();
    const [isDialogOpen, setIsDialogOpen] = useState(false);
+   if (isLoading) {
+      return <Skeleton className="h-8 w-8 rounded-full" />;
+   }
    if (!user) {
       return (
          <Button asChild>
@@ -82,7 +86,6 @@ export default function AuthButton() {
             open={isDialogOpen}
             onOpenChange={setIsDialogOpen}
             user={user}
-            onUpdate={refreshUser}
          />
       </>
    );

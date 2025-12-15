@@ -30,10 +30,9 @@ interface EditProfileDialogProps {
    open: boolean;
    onOpenChange: (open: boolean) => void;
    user: User;
-   onUpdate: () => void;
 }
 
-export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditProfileDialogProps) {
+export function EditProfileDialog({ open, onOpenChange, user }: EditProfileDialogProps) {
    const [isLoading, setIsLoading] = useState(false);
    const [isUploading, setIsUploading] = useState(false);
    const fileInputRef = useRef<HTMLInputElement>(null);
@@ -198,7 +197,6 @@ export function EditProfileDialog({ open, onOpenChange, user, onUpdate }: EditPr
             throw error;
          }
          toast.success("Profile updated successfully");
-         onUpdate();
          onOpenChange(false);
       } catch (error) {
          toast.error(
