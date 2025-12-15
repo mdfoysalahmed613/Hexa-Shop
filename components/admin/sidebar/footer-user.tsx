@@ -25,7 +25,7 @@ import { LogoutMenuItem } from '@/components/ui/logout-menu-item'
 const FooterUser = () => {
    const [isDialogOpen, setIsDialogOpen] = useState(false)
    const { isMobile } = useSidebar()
-   const { user, refreshUser } = useUser();
+   const { user } = useUser();
    
    if (!user) return null;
    return (
@@ -92,7 +92,6 @@ const FooterUser = () => {
             open={isDialogOpen}
             onOpenChange={setIsDialogOpen}
             user={user}
-            onUpdate={refreshUser}
          />
       </>
    )
