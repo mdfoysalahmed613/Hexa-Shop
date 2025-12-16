@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 export const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -55,7 +55,8 @@ export const LoginForm = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <GoogleAuthButton onError={(msg) => setError(msg)} />
+          <Suspense><GoogleAuthButton onError={(msg) => setError(msg)} /></Suspense>
+          
           <div className="my-4 flex items-center gap-2">
             <hr className="flex-1 border-t border-muted-foreground/20" />
             <span className="text-sm text-muted-foreground">or</span>

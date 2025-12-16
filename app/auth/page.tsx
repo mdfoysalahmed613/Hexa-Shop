@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export default function AuthPage() {
    return (
@@ -23,7 +24,8 @@ export default function AuthPage() {
                   <TabsTrigger value="register">Register</TabsTrigger>
                </TabsList>
                <TabsContent value="login" className="mt-6">
-                  <LoginForm />
+                  <Suspense><LoginForm /></Suspense>
+                  
                </TabsContent>
                <TabsContent value="register" className="mt-6">
                   <SignUpForm />
