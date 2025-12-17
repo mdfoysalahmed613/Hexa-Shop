@@ -18,7 +18,8 @@ import { LogoutMenuItem } from "@/components/home/navbar/logout-menu-item";
 import { EditProfileDialog } from "../../auth/edit-profile-dialog";
 import { hasAdminAccess, isAdmin, isDemoAdmin } from "@/lib/auth/roles";
 import { useUser } from "@/providers/user-provider";
-import BecomeDemoAdmin from "./become-demo-admin";
+import BecomeDemoAdminClient from "./become-demo-admin-client";
+import { becomeDemoAdmin } from "@/app/actions/demo-admin";
 
 export default function AuthButton() {
    const { user, isLoading } = useUser();
@@ -74,8 +75,8 @@ export default function AuthButton() {
                   </DropdownMenuItem>
                )}
 
-               {/* Become Demo Admin component - server component with client action wrapper */}
-               {!hasAdminAccess(user) && <BecomeDemoAdmin />}
+               {/* Become Demo Admin - client component with server action */}
+               {!hasAdminAccess(user) && <BecomeDemoAdminClient onBecomeDemoAdmin={becomeDemoAdmin} />}
 
                <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>
                   <User className="mr-2 h-4 w-4" />

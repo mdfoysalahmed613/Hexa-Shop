@@ -1,5 +1,5 @@
 import BecomeDemoAdminClient from './become-demo-admin-client';
-import { becomeDemoAdmin } from '@/lib/auth/demo-admin';
+import { becomeDemoAdmin } from '@/app/actions/demo-admin';
 
 const BecomeDemoAdmin = () => {
    return <BecomeDemoAdminClient onBecomeDemoAdmin={becomeDemoAdmin} />;

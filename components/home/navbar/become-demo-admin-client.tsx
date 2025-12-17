@@ -40,7 +40,6 @@ const BecomeDemoAdminClient = ({ onBecomeDemoAdmin }: BecomeDemoAdminClientProps
 
          // Refresh the user session to get updated app_metadata with new role
          await refreshUser();
-
          toast.success('Demo admin enabled!');
          setIsOpen(false);
 
