@@ -1,3 +1,5 @@
+// OAuth callback handler: exchanges code for a Supabase session
+// and redirects back to the requested relative path.
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 

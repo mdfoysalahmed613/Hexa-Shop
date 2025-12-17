@@ -1,4 +1,6 @@
 "use client";
+// Email/password login form with Google OAuth.
+// Respects `?redirect=` query to send users back post-login.
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { GoogleAuthButton } from "@/components/auth/google-auth-button";
@@ -56,7 +58,7 @@ export const LoginForm = () => {
         </CardHeader>
         <CardContent>
           <Suspense><GoogleAuthButton onError={(msg) => setError(msg)} /></Suspense>
-          
+
           <div className="my-4 flex items-center gap-2">
             <hr className="flex-1 border-t border-muted-foreground/20" />
             <span className="text-sm text-muted-foreground">or</span>

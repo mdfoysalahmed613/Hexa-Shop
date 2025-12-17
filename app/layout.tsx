@@ -1,3 +1,5 @@
+// Root layout: server-rendered shell for the entire app.
+// Provides theme and user context; keep client-only hooks out of here.
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
@@ -25,12 +27,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
+        {/* Theme provider controls dark/light mode across the app */}
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
+          {/* UserProvider subscribes to Supabase auth state on the client */}
           <UserProvider>
             {children}
             <Toaster position="top-center" richColors />

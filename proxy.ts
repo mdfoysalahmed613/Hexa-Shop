@@ -1,3 +1,4 @@
+// Next.js middleware entry: delegates to Supabase proxy for session refresh.
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 

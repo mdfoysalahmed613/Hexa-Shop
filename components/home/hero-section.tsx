@@ -1,5 +1,5 @@
-"use client";
-
+// Marketing hero section with static image. Uses blur placeholder
+// to avoid layout/pop-in glitches during image load.
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
@@ -60,7 +60,6 @@ export function HeroSection() {
                <div className="relative flex justify-center lg:justify-end items-center">
                   {/* Decorative Background Bubble */}
                   <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/10 rounded-full blur-3xl" />
-
                   <div className="relative w-full max-w-[450px] lg:max-w-[600px] aspect-square rounded-full overflow-hidden border-8 border-background ring-1 ring-border/20">
                      <Image
                         src={HeroImage}
@@ -74,7 +73,6 @@ export function HeroSection() {
                </div>
             </div>
          </div>
-
       </section>
    );
 }

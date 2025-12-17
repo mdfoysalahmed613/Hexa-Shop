@@ -1,4 +1,5 @@
-
+// Admin layout shell. Sidebar + breadcrumb header wrapping child pages.
+// Auth/role protection is handled via middleware.
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/admin/sidebar/app-sidebar";
@@ -18,6 +19,7 @@ const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
                      orientation="vertical"
                      className="mr-2 data-[orientation=vertical]:h-4"
                   />
+                  {/* Breadcrumb reflects current admin route path */}
                   <DynamicBreadcrumb />
                </div>
                <Link href="/" className="flex gap-2 text-sm items-center justify-center hover:bg-accent m-2 rounded-md p-2">

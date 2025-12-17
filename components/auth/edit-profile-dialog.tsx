@@ -1,4 +1,6 @@
 "use client";
+// Edit profile dialog: updates user profile fields and avatar in Supabase.
+// Handles client-side validation and upload constraints (type/size) with feedback.
 
 import { useEffect, useRef, useState } from "react";
 import { User } from "@supabase/supabase-js";

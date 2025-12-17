@@ -18,15 +18,15 @@ import {
 import { EllipsisVertical, User } from 'lucide-react'
 import { useUser } from '@/providers/user-provider'
 import { EditProfileDialog } from '@/components/auth/edit-profile-dialog'
-import { ThemeSwitcher } from '@/components/ui/theme-switcher'
-import { UserAvatar } from '@/components/ui/user-avatar'
-import { LogoutMenuItem } from '@/components/ui/logout-menu-item'
+import { ThemeSwitcher } from '@/components/common/theme-switcher'
+import { UserAvatar } from '@/components/home/navbar/user-avatar'
+import { LogoutMenuItem } from '@/components/home/navbar/logout-menu-item'
 
 const FooterUser = () => {
    const [isDialogOpen, setIsDialogOpen] = useState(false)
    const { isMobile } = useSidebar()
    const { user } = useUser();
-   
+
    if (!user) return null;
    return (
       <>

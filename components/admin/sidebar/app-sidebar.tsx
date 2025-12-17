@@ -1,4 +1,5 @@
 "use client";
+// Admin sidebar navigation. Collapsible groups reflect current route via pathname.
 
 import {
   LayoutDashboard,
@@ -121,7 +122,7 @@ export function AppSidebar() {
             <span className="text-xs text-muted-foreground">Admin Panel</span>
           </div>
         </Link>
-        
+
       </SidebarHeader>
 
       <SidebarContent>

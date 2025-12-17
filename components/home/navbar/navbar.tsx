@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import { ShoppingCart, Search, X, Hexagon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import AuthButton from "../auth/auth-button";
+import AuthButton from "./auth-button";
 
 export function Navbar() {
 
    const [searchOpen, setSearchOpen] = useState(false);
    const [searchQuery, setSearchQuery] = useState("");
-   
+
    return (
       <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
          <div className="container mx-auto px-4">

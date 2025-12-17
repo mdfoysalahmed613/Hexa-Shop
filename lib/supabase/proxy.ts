@@ -1,5 +1,8 @@
+// Middleware helper that refreshes Supabase sessions on each request
+// and protects admin routes based on user role.
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { hasAdminAccess } from "@/lib/auth/roles";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -16,6 +19,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
+          // Sync cookies between request and response to keep session stable
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -52,9 +56,9 @@ export async function updateSession(request: NextRequest) {
     const {
       data: { user: userData },
     } = await supabase.auth.getUser();
-    const isAdmin = userData?.app_metadata?.role === "admin";
+    const canAccessAdmin = hasAdminAccess(userData ?? null);
 
-    if (!isAdmin) {
+    if (!canAccessAdmin) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
