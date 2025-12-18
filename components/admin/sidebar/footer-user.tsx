@@ -1,10 +1,8 @@
 "use client"
-import { useState } from 'react'
 import {
    DropdownMenu,
    DropdownMenuContent,
    DropdownMenuGroup,
-   DropdownMenuItem,
    DropdownMenuLabel,
    DropdownMenuSeparator,
    DropdownMenuTrigger,
@@ -15,15 +13,14 @@ import {
    SidebarMenuItem,
    useSidebar,
 } from "@/components/ui/sidebar"
-import { EllipsisVertical, User } from 'lucide-react'
+import { EllipsisVertical } from 'lucide-react'
 import { useUser } from '@/providers/user-provider'
-import { EditProfileDialog } from '@/components/auth/edit-profile-dialog'
+import { EditProfileDialog } from '@/components/home/navbar/edit-profile-dialog'
 import { ThemeSwitcher } from '@/components/common/theme-switcher'
 import { UserAvatar } from '@/components/home/navbar/user-avatar'
 import { LogoutMenuItem } from '@/components/home/navbar/logout-menu-item'
 
 const FooterUser = () => {
-   const [isDialogOpen, setIsDialogOpen] = useState(false)
    const { isMobile } = useSidebar()
    const { user } = useUser();
 
@@ -75,10 +72,9 @@ const FooterUser = () => {
                      </DropdownMenuLabel>
                      <DropdownMenuSeparator />
                      <DropdownMenuGroup>
-                        <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>
-                           <User className='mr-2' />
-                           Edit Profile
-                        </DropdownMenuItem>
+                        <EditProfileDialog
+                           user={user}
+                        />
                         <ThemeSwitcher />
                      </DropdownMenuGroup>
                      <DropdownMenuSeparator />
@@ -88,11 +84,7 @@ const FooterUser = () => {
             </SidebarMenuItem>
          </SidebarMenu>
 
-         <EditProfileDialog
-            open={isDialogOpen}
-            onOpenChange={setIsDialogOpen}
-            user={user}
-         />
+         
       </>
    )
 }

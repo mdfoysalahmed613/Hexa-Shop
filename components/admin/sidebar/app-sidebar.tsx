@@ -108,7 +108,7 @@ export function AppSidebar() {
   return (
     <Sidebar variant="inset" collapsible="icon" >
       <SidebarHeader className="border-b flex flex-col gap-2">
-        <Link href="/admin" className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:p-2!">
+        <Link href="/" className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:p-2!">
           <div className="flex h-6 w-6 items-center justify-center rounded-lg">
             <Hexagon className="h-6 w-6 text-primary" strokeWidth={3} />
           </div>

@@ -24,12 +24,17 @@ export function UserAvatar({
          .slice(0, 2);
    };
 
+   const avatarUrl = user.user_metadata?.avatar_url;
+   const hasValidAvatar = avatarUrl && avatarUrl.trim() !== "";
+
    return (
       <Avatar className={className}>
-         <AvatarImage
-            src={user.user_metadata?.avatar_url}
-            alt={user.user_metadata?.full_name || user.email || "User"}
-         />
+         {hasValidAvatar && (
+            <AvatarImage
+               src={avatarUrl}
+               alt={user.user_metadata?.full_name || user.email || "User"}
+            />
+         )}
          <AvatarFallback className={fallbackClassName}>
             {getUserInitials(user)}
          </AvatarFallback>

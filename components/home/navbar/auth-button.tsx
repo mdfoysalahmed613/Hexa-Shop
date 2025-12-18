@@ -15,7 +15,7 @@ import {
 import { ThemeSwitcher } from "@/components/common/theme-switcher";
 import { UserAvatar } from "@/components/home/navbar/user-avatar";
 import { LogoutMenuItem } from "@/components/home/navbar/logout-menu-item";
-import { EditProfileDialog } from "../../auth/edit-profile-dialog";
+import { EditProfileDialog } from "./edit-profile-dialog";
 import { hasAdminAccess, isAdmin, isDemoAdmin } from "@/lib/auth/roles";
 import { useUser } from "@/providers/user-provider";
 import BecomeDemoAdminClient from "./become-demo-admin-client";
@@ -23,7 +23,7 @@ import { becomeDemoAdmin } from "@/app/actions/demo-admin";
 
 export default function AuthButton() {
    const { user, isLoading } = useUser();
-   const [isDialogOpen, setIsDialogOpen] = useState(false);
+   
    if (isLoading) {
       return <Skeleton className="h-8 w-8 rounded-full" />;
    }
@@ -77,24 +77,14 @@ export default function AuthButton() {
 
                {/* Become Demo Admin - client component with server action */}
                {!hasAdminAccess(user) && <BecomeDemoAdminClient onBecomeDemoAdmin={becomeDemoAdmin} />}
-
-               <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Edit Profile</span>
-               </DropdownMenuItem>
-
+               
+               <EditProfileDialog user={user} />
                <ThemeSwitcher />
                <DropdownMenuSeparator />
 
                <LogoutMenuItem />
             </DropdownMenuContent>
          </DropdownMenu>
-
-         <EditProfileDialog
-            open={isDialogOpen}
-            onOpenChange={setIsDialogOpen}
-            user={user}
-         />
       </>
    );
 }
