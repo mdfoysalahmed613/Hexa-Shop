@@ -13,7 +13,6 @@ import {
    ProductImagesForm,
    productFormSchema,
    defaultProductFormValues,
-   generateSlug,
    type ProductFormData,
 } from "@/components/admin/products";
 import { addProduct } from "@/app/actions/add-product";
@@ -27,17 +26,6 @@ export default function AddNewProductPage() {
       defaultValues: defaultProductFormValues,
    });
 
-   const handleNameChange = (name: string) => {
-      // Auto-generate slug from name if slug is empty or was auto-generated
-      const currentSlug = form.getValues("slug");
-      const expectedSlug = generateSlug(form.getValues("name"));
-
-      // Only update if slug is empty or matches the previous auto-generated slug
-      if (!currentSlug || currentSlug === expectedSlug) {
-         form.setValue("slug", generateSlug(name));
-      }
-   };
-
    const handleReset = () => {
       form.reset(defaultProductFormValues);
    };
@@ -49,12 +37,13 @@ export default function AddNewProductPage() {
          // Prepare form data for server action
          const formData = new FormData();
          formData.append("name", data.name);
-         formData.append("slug", data.slug);
          formData.append("description", data.description || "");
          formData.append("price", data.price.toString());
+         formData.append("compare_price", data.compare_price?.toString() || "");
          formData.append("category", data.category);
          formData.append("stock", data.stock.toString());
          formData.append("sku", data.sku || "");
+         formData.append("is_active", data.is_active.toString());
 
          // Append images
          data.images.forEach((image) => {
@@ -92,10 +81,7 @@ export default function AddNewProductPage() {
             <div className="grid gap-6 md:grid-cols-3">
                {/* Main Product Information */}
                <div className="md:col-span-2 space-y-6">
-                  <ProductInfoForm
-                     control={form.control}
-                     onNameChange={handleNameChange}
-                  />
+                  <ProductInfoForm control={form.control} />
                </div>
 
                {/* Sidebar: Images and Actions */}

@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { DefaultAvatar } from "@/assets/common";
 import { Trash2, Upload, UserIcon } from "lucide-react";
-import { useUser } from "@/providers/user-provider";
 
 interface FormData {
    fullName: string;

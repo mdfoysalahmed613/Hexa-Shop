@@ -2,7 +2,7 @@
 
 import { Controller, Control } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Tiptap } from "@/components/ui/tiptap";
 import {
    Select,
    SelectContent,
@@ -13,9 +13,6 @@ import {
 import {
    Card,
    CardContent,
-   CardDescription,
-   CardHeader,
-   CardTitle,
 } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import type { ProductFormData } from "@/components/admin/products/product-form-schema";
@@ -30,21 +27,14 @@ const categories = [
 
 interface ProductInfoFormProps {
    control: Control<ProductFormData>;
-   onNameChange?: (name: string) => void;
 }
 
-export function ProductInfoForm({ control, onNameChange }: ProductInfoFormProps) {
+export function ProductInfoForm({ control }: ProductInfoFormProps) {
    return (
       <Card>
-         <CardHeader>
-            <CardTitle>Product Information</CardTitle>
-            <CardDescription>
-               Enter the basic details of your product
-            </CardDescription>
-         </CardHeader>
          <CardContent>
             <FieldGroup>
-               {/* Product Name */}
+               {/* Product Name and Category */}
                <div className="grid gap-4 sm:grid-cols-2">
                   <Controller
                      name="name"
@@ -58,79 +48,6 @@ export function ProductInfoForm({ control, onNameChange }: ProductInfoFormProps)
                               id="name"
                               placeholder="e.g., Classic White T-Shirt"
                               {...field}
-                              onChange={(e) => {
-                                 field.onChange(e);
-                                 onNameChange?.(e.target.value);
-                              }}
-                           />
-                           {fieldState.error && (
-                              <FieldError errors={[{ message: fieldState.error.message }]} />
-                           )}
-                        </Field>
-                     )}
-                  />
-
-                  {/* Slug */}
-                  <Controller
-                     name="slug"
-                     control={control}
-                     render={({ field, fieldState }) => (
-                        <Field>
-                           <FieldLabel htmlFor="slug">
-                              Slug <span className="text-red-500">*</span>
-                           </FieldLabel>
-                           <Input
-                              id="slug"
-                              placeholder="e.g., classic-white-t-shirt"
-                              {...field}
-                           />
-                           {fieldState.error && (
-                              <FieldError errors={[{ message: fieldState.error.message }]} />
-                           )}
-                        </Field>
-                     )}
-                  />
-               </div>
-
-               {/* Description */}
-               <Controller
-                  name="description"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                     <Field>
-                        <FieldLabel htmlFor="description">Description</FieldLabel>
-                        <Textarea
-                           id="description"
-                           placeholder="Enter product description..."
-                           {...field}
-                           value={field.value || ""}
-                           className="min-h-32"
-                        />
-                        {fieldState.error && (
-                           <FieldError errors={[{ message: fieldState.error.message }]} />
-                        )}
-                     </Field>
-                  )}
-               />
-
-               {/* Price and Category */}
-               <div className="grid gap-4 sm:grid-cols-2">
-                  <Controller
-                     name="price"
-                     control={control}
-                     render={({ field, fieldState }) => (
-                        <Field>
-                           <FieldLabel htmlFor="price">
-                              Price <span className="text-red-500">*</span>
-                           </FieldLabel>
-                           <Input
-                              id="price"
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              placeholder="0.00"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                            />
                            {fieldState.error && (
                               <FieldError errors={[{ message: fieldState.error.message }]} />
@@ -162,6 +79,82 @@ export function ProductInfoForm({ control, onNameChange }: ProductInfoFormProps)
                                  ))}
                               </SelectContent>
                            </Select>
+                           {fieldState.error && (
+                              <FieldError errors={[{ message: fieldState.error.message }]} />
+                           )}
+                        </Field>
+                     )}
+                  />
+               </div>
+
+               {/* Description */}
+               <Controller
+                  name="description"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                     <Field>
+                        <FieldLabel htmlFor="description">Description</FieldLabel>
+                        <Tiptap
+                           content={field.value || ""}
+                           onChange={field.onChange}
+                           placeholder="Enter product description..."
+                        />
+                        {fieldState.error && (
+                           <FieldError errors={[{ message: fieldState.error.message }]} />
+                        )}
+                     </Field>
+                  )}
+               />
+
+               {/* Price and Compare Price */}
+               <div className="grid gap-4 sm:grid-cols-2">
+                  <Controller
+                     name="price"
+                     control={control}
+                     render={({ field, fieldState }) => (
+                        <Field>
+                           <FieldLabel htmlFor="price">
+                              Price <span className="text-red-500">*</span>
+                           </FieldLabel>
+                           <Input
+                              id="price"
+                              type="number"
+                              step="0.01"
+                              min="1"
+                              placeholder="Enter price"
+                              value={field.value === 0 ? "" : field.value}
+                              onChange={(e) => {
+                                 const val = e.target.value;
+                                 field.onChange(val === "" ? undefined : parseFloat(val));
+                              }}
+                           />
+                           {fieldState.error && (
+                              <FieldError errors={[{ message: fieldState.error.message }]} />
+                           )}
+                        </Field>
+                     )}
+                  />
+
+                  <Controller
+                     name="compare_price"
+                     control={control}
+                     render={({ field, fieldState }) => (
+                        <Field>
+                           <FieldLabel htmlFor="compare_price">
+                              Compare Price (Original)
+                           </FieldLabel>
+                           <Input
+                              id="compare_price"
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="e.g., 99.99"
+                              value={field.value ?? ""}
+                              onChange={(e) => {
+                                 const val = e.target.value;
+                                 field.onChange(val === "" ? undefined : parseFloat(val));
+                              }}
+                           />
                            {fieldState.error && (
                               <FieldError errors={[{ message: fieldState.error.message }]} />
                            )}
@@ -214,6 +207,32 @@ export function ProductInfoForm({ control, onNameChange }: ProductInfoFormProps)
                      )}
                   />
                </div>
+
+               {/* Status */}
+               <Controller
+                  name="is_active"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                     <Field>
+                        <FieldLabel htmlFor="is_active">Status</FieldLabel>
+                        <Select
+                           value={field.value ? "active" : "draft"}
+                           onValueChange={(val) => field.onChange(val === "active")}
+                        >
+                           <SelectTrigger id="is_active" className="w-full">
+                              <SelectValue placeholder="Select status" />
+                           </SelectTrigger>
+                           <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="draft">Draft</SelectItem>
+                           </SelectContent>
+                        </Select>
+                        {fieldState.error && (
+                           <FieldError errors={[{ message: fieldState.error.message }]} />
+                        )}
+                     </Field>
+                  )}
+               />
             </FieldGroup>
          </CardContent>
       </Card>

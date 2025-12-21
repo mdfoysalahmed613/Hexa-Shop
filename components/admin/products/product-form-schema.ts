@@ -9,18 +9,16 @@ export type ProductImage = z.infer<typeof productImageSchema>;
 
 export const productFormSchema = z.object({
   name: z.string().min(1, "Product name is required"),
-  slug: z
-    .string()
-    .min(1, "Slug is required")
-    .regex(
-      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      "Slug must be lowercase with hyphens only (e.g., classic-white-t-shirt)"
-    ),
   description: z.string().optional(),
-  price: z.number().min(0, "Price must be at least 0"),
+  price: z.number().min(1, "Price must be at least 1"),
+  compare_price: z
+    .number()
+    .min(0, "Compare price must be at least 0")
+    .optional(),
   category: z.string().min(1, "Category is required"),
   stock: z.number().min(0, "Stock must be at least 0"),
   sku: z.string().optional(),
+  is_active: z.boolean(), // Required - set default in defaultProductFormValues
   images: z.array(productImageSchema).min(1, "At least one image is required"),
 });
 
@@ -28,12 +26,13 @@ export type ProductFormData = z.infer<typeof productFormSchema>;
 
 export const defaultProductFormValues: ProductFormData = {
   name: "",
-  slug: "",
   description: "",
-  price: 0,
+  price: undefined as unknown as number, // Force user to enter price
+  compare_price: undefined,
   category: "",
   stock: 0,
   sku: "",
+  is_active: true,
   images: [],
 };
 
