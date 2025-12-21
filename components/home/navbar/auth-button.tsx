@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
-import { Shield, User } from "lucide-react";
+import { Shield } from "lucide-react";
 import { Button } from "../../ui/button";
 import { Skeleton } from "../../ui/skeleton";
 import {

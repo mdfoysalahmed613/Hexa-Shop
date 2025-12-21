@@ -1,248 +1,128 @@
 "use client";
 
-import { z } from "zod";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Field, FieldError } from "@/components/ui/field";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Controller, useForm } from "react-hook-form";
-import {
-   Select,
-   SelectContent,
-   SelectGroup,
-   SelectItem,
-   SelectLabel,
-   SelectTrigger,
-   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { RotateCcw } from "lucide-react";
+import {
+   ProductInfoForm,
+   ProductImagesForm,
+   productFormSchema,
+   defaultProductFormValues,
+   generateSlug,
+   type ProductFormData,
+} from "@/components/admin/products";
+import { addProduct } from "@/app/actions/add-product";
 
-const formSchema = z.object({
-   name: z.string().min(1, "Product name is required"),
-   price: z
-      .string()
-      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-         message: "Price must be a positive number",
-      }),
-   sku: z.string().min(1, "SKU is required"),
-   stock: z
-      .string()
-      .refine((val) => Number.isInteger(Number(val)) && Number(val) >= 0, {
-         message: "Stock must be a non-negative integer",
-      }),
-   category: z.string().min(1, "Category is required"),
-   description: z.string().min(1, "Description is required"),
-   images: z
-      .any()
-      .refine((files) => files instanceof FileList && files.length > 0, {
-         message: "At least one image is required",
-      }),
-})
+export default function AddNewProductPage() {
+   const router = useRouter();
+   const [isLoading, setIsLoading] = useState(false);
 
-export default function AddProductPage() {
-   const form = useForm<z.infer<typeof formSchema>>({
-      resolver: zodResolver(formSchema),
-      defaultValues: {
-         name: "",
-         price: "",
-         sku: "",
-         stock: "",
-         category: "",
-         description: "",
-         images: [],
-      },
-   })
-   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-      console.log("Form Data:", data);
-      // Add your Supabase logic here
-      toast.success("Form submitted! Check console for data.");
-   }
+   const form = useForm<ProductFormData>({
+      resolver: zodResolver(productFormSchema),
+      defaultValues: defaultProductFormValues,
+   });
+
+   const handleNameChange = (name: string) => {
+      // Auto-generate slug from name if slug is empty or was auto-generated
+      const currentSlug = form.getValues("slug");
+      const expectedSlug = generateSlug(form.getValues("name"));
+
+      // Only update if slug is empty or matches the previous auto-generated slug
+      if (!currentSlug || currentSlug === expectedSlug) {
+         form.setValue("slug", generateSlug(name));
+      }
+   };
+
+   const handleReset = () => {
+      form.reset(defaultProductFormValues);
+   };
+
+   const handleSubmit = async (data: ProductFormData) => {
+      setIsLoading(true);
+
+      try {
+         // Prepare form data for server action
+         const formData = new FormData();
+         formData.append("name", data.name);
+         formData.append("slug", data.slug);
+         formData.append("description", data.description || "");
+         formData.append("price", data.price.toString());
+         formData.append("category", data.category);
+         formData.append("stock", data.stock.toString());
+         formData.append("sku", data.sku || "");
+
+         // Append images
+         data.images.forEach((image) => {
+            formData.append("images", image.file);
+         });
+
+         const result = await addProduct(formData);
+
+         if (!result.ok) {
+            throw new Error(result.error);
+         }
+
+         toast.success("Product added successfully!");
+         router.push("/admin/products");
+      } catch (error: unknown) {
+         toast.error(
+            error instanceof Error ? error.message : "Failed to add product"
+         );
+      } finally {
+         setIsLoading(false);
+      }
+   };
+
    return (
-      <Card className="my-6 mx-2 md:mx-6 xl:mx-auto max-w-5xl">
-         <CardHeader className="text-2xl md:text-3xl font-semibold tracking-tight mb-6">
-            Add New Product
-         </CardHeader>
-         <CardContent>
-            <form id="product-form" className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Controller
-                     control={form.control}
-                     name="name"
-                     render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                           <Label htmlFor="name">Product Name</Label>
-                           <Input
-                              id="name"
-                              {...field}
-                              aria-invalid={fieldState.invalid}
-                              placeholder="e.g., Classic Oxford Shirt"
+      <div className="flex flex-1 flex-col gap-4 p-6">
+         {/* Header */}
+         <div>
+            <h1 className="text-3xl font-bold tracking-tight">Add New Product</h1>
+            <p className="text-muted-foreground">
+               Create a new product in your inventory
+            </p>
+         </div>
 
-                           />
-                           {form.formState.errors.name && (
-                              <FieldError errors={[fieldState.error]}>
-                                 {form.formState.errors.name.message as string}
-                              </FieldError>
-                           )}
-                        </Field>
-                     )}
-                  />
-
-                  <Controller
+         <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <div className="grid gap-6 md:grid-cols-3">
+               {/* Main Product Information */}
+               <div className="md:col-span-2 space-y-6">
+                  <ProductInfoForm
                      control={form.control}
-                     name="price"
-                     render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                           <Label htmlFor="price">Price</Label>
-                           <Input
-                              id="price"
-                              type="number"
-                              step="0.01"
-                              {...field}
-                              aria-invalid={fieldState.invalid}
-                              placeholder="e.g., 49.99"
-                           />
-                           {fieldState.error && (
-                              <FieldError errors={[fieldState.error]}>
-                                 {fieldState.error.message as string}
-                              </FieldError>
-                           )}
-                        </Field>
-                     )}
-                  />
-
-                  <Controller
-                     control={form.control}
-                     name="sku"
-                     render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                           <Label htmlFor="sku">SKU</Label>
-                           <Input
-                              id="sku"
-                              {...field}
-                              aria-invalid={fieldState.invalid}
-                              placeholder="e.g., OXF-CL-001"
-                           />
-                           {fieldState.error && (
-                              <FieldError errors={[fieldState.error]}>
-                                 {fieldState.error.message as string}
-                              </FieldError>
-                           )}
-                        </Field>
-                     )}
-                  />
-
-                  <Controller
-                     control={form.control}
-                     name="stock"
-                     render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                           <Label htmlFor="stock">Stock</Label>
-                           <Input
-                              id="stock"
-                              type="number"
-                              {...field}
-                              aria-invalid={fieldState.invalid}
-                              placeholder="e.g., 120"
-                           />
-                           {fieldState.error && (
-                              <FieldError errors={[fieldState.error]}>
-                                 {fieldState.error.message as string}
-                              </FieldError>
-                           )}
-                        </Field>
-                     )}
-                  />
-
-                  <Controller
-                     control={form.control}
-                     name="category"
-                     render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                           <Label htmlFor="category">Category</Label>
-                           <Select value={field.value} onValueChange={field.onChange}>
-                              <SelectTrigger className="w-full">
-                                 <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                 <SelectGroup>
-                                    <SelectLabel>Categories</SelectLabel>
-                                    <SelectItem value="shirts">Shirts</SelectItem>
-                                    <SelectItem value="pants">Pants</SelectItem>
-                                    <SelectItem value="wallets">Wallets</SelectItem>
-                                    <SelectItem value="accessories">Accessories</SelectItem>
-                                 </SelectGroup>
-                              </SelectContent>
-                           </Select>
-                           {fieldState.error && (
-                              <FieldError errors={[fieldState.error]}>
-                                 {fieldState.error.message as string}
-                              </FieldError>
-                           )}
-                        </Field>
-                     )}
-                  />
-
-                  <Controller
-                     control={form.control}
-                     name="images"
-                     render={({ field: { onChange, value, ...field }, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                           <Label htmlFor="images">Images</Label>
-                           <Input
-                              id="images"
-                              type="file"
-                              accept="image/*"
-                              multiple
-                              {...field}
-                              aria-invalid={fieldState.invalid}
-                              onChange={(e) => onChange(e.target.files)}
-                           />
-                           {fieldState.error && (
-                              <FieldError errors={[fieldState.error]}>
-                                 {fieldState.error.message as string}
-                              </FieldError>
-                           )}
-                        </Field>
-                     )}
+                     onNameChange={handleNameChange}
                   />
                </div>
-               <Controller
-                  control={form.control}
-                  name="description"
-                  render={({ field, fieldState }) => (
-                     <Field data-invalid={fieldState.invalid}>
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                           id="description"
-                           rows={5}
-                           className="h-32"
-                           {...field}
-                           aria-invalid={fieldState.invalid}
-                           placeholder="Brief product details, materials, fit, care..."
-                        />
-                        {fieldState.error && (
-                           <FieldError errors={[fieldState.error]}>
-                              {fieldState.error.message as string}
-                           </FieldError>
-                        )}
-                     </Field>
-                  )}
-               />
-            </form>
-         </CardContent>
-         <CardFooter>
-            <Field orientation="horizontal">
-               <Button type="submit" form="product-form" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Submitting..." : "Submit"}
-               </Button>
-               <Button type="button" variant="outline" onClick={() => form.reset()}>
-                  Reset
-               </Button>
-            </Field>
-         </CardFooter>
-      </Card>
+
+               {/* Sidebar: Images and Actions */}
+               <div className="space-y-6">
+                  <ProductImagesForm control={form.control} />
+
+                  {/* Action Buttons */}
+                  <Card>
+                     <CardContent className="pt-6 space-y-2">
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                           {isLoading ? "Adding Product..." : "Add Product"}
+                        </Button>
+                        <Button
+                           type="button"
+                           variant="outline"
+                           className="w-full"
+                           onClick={handleReset}
+                           disabled={isLoading}
+                        >
+                           <RotateCcw className="mr-2 h-4 w-4" />
+                           Reset Form
+                        </Button>
+                     </CardContent>
+                  </Card>
+               </div>
+            </div>
+         </form>
+      </div>
    );
 }
