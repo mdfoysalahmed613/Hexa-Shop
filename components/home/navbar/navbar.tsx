@@ -7,6 +7,7 @@ import { ShoppingCart, Search, X, Hexagon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import AuthButton from "./auth-button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 export function Navbar() {
 
@@ -31,16 +32,12 @@ export function Navbar() {
 
                {/* Desktop Search Bar */}
                <div className="hidden md:flex md:flex-1 md:max-w-xl md:mx-8">
-                  <div className="relative w-full">
-                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                     <Input
-                        type="search"
-                        placeholder="Search products..."
-                        className="w-full pl-9 pr-4"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                     />
-                  </div>
+                  <InputGroup>
+                     <InputGroupInput value={searchQuery} placeholder="Search..." onChange={(e) => setSearchQuery(e.target.value)} />
+                     <InputGroupAddon>
+                        <Search />
+                     </InputGroupAddon>
+                  </InputGroup>
                </div>
 
                {/* Mobile Search Bar - Shows when search is open */}
