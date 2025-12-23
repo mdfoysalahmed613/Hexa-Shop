@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { UserProvider } from "@/providers/user-provider";
+import { QueryProvider } from "@/providers/query-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -34,11 +35,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* UserProvider subscribes to Supabase auth state on the client */}
-          <UserProvider>
-            {children}
-            <Toaster position="top-center" richColors />
-          </UserProvider>
+          {/* QueryProvider wraps TanStack Query for data fetching */}
+          <QueryProvider>
+            {/* UserProvider subscribes to Supabase auth state on the client */}
+            <UserProvider>
+              {children}
+              <Toaster position="top-center" richColors />
+            </UserProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

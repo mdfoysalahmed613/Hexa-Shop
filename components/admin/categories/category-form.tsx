@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,6 @@ export function CategoryForm({
    const {
       control,
       handleSubmit,
-      watch,
       setValue,
       reset,
    } = useForm<CategoryFormData>({
@@ -44,12 +43,13 @@ export function CategoryForm({
          description: defaultValues?.description || category?.description || "",
          is_active: defaultValues?.is_active ?? category?.is_active ?? true,
          image: null,
-         existingImage: category?.image || null,
+         image_url: category?.image || null,
       },
    });
 
-   const imageFile = watch("image");
-   const existingImage = watch("existingImage");
+   // Use useWatch for reactive field values
+   const imageFile = useWatch({ control, name: "image" });
+   const currentImageUrl = useWatch({ control, name: "image_url" });
 
    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -60,7 +60,7 @@ export function CategoryForm({
 
    const removeImage = () => {
       setValue("image", null);
-      setValue("existingImage", null);
+      setValue("image_url", null);
       if (fileInputRef.current) {
          fileInputRef.current.value = "";
       }
@@ -68,7 +68,7 @@ export function CategoryForm({
 
    const imagePreview = imageFile
       ? URL.createObjectURL(imageFile)
-      : existingImage;
+      : currentImageUrl;
 
    const handleFormSubmit = async (data: CategoryFormData) => {
       await onSubmit(data);
@@ -82,18 +82,19 @@ export function CategoryForm({
             name="name"
             control={control}
             render={({ field, fieldState }) => (
-               <Field data-invalid={!!fieldState.error}>
+               <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="name">
-                     Category Name <span className="text-destructive">*</span>
+                     Category Name <span className="text-red-500">*</span>
                   </FieldLabel>
                   <Input
                      id="name"
                      placeholder="e.g., Summer Collection"
                      disabled={isSubmitting}
+                     aria-invalid={fieldState.invalid}
                      {...field}
                   />
-                  {fieldState.error && (
-                     <FieldError errors={[{ message: fieldState.error.message }]} />
+                  {fieldState.invalid && (
+                     <FieldError errors={[fieldState.error]} />
                   )}
                </Field>
             )}
@@ -104,17 +105,18 @@ export function CategoryForm({
             name="description"
             control={control}
             render={({ field, fieldState }) => (
-               <Field data-invalid={!!fieldState.error}>
+               <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="description">Description</FieldLabel>
                   <Input
                      id="description"
                      placeholder="Brief description..."
                      disabled={isSubmitting}
+                     aria-invalid={fieldState.invalid}
                      {...field}
                      value={field.value || ""}
                   />
-                  {fieldState.error && (
-                     <FieldError errors={[{ message: fieldState.error.message }]} />
+                  {fieldState.invalid && (
+                     <FieldError errors={[fieldState.error]} />
                   )}
                </Field>
             )}
@@ -187,7 +189,7 @@ export function CategoryForm({
                      Click to upload image
                   </p>
                   <p className="text-xs text-muted-foreground">
-                     PNG, JPG, GIF up to 10MB
+                     PNG, JPG, GIF up to 2MB
                   </p>
                </div>
             )}

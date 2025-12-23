@@ -15,7 +15,7 @@ import {
    defaultProductFormValues,
    type ProductFormData,
 } from "@/components/admin/products";
-import { addProduct } from "@/app/actions/add-product";
+import { addProduct } from "@/lib/services/products";
 
 export default function AddNewProductPage() {
    const router = useRouter();

@@ -23,9 +23,9 @@ import { useState } from "react";
 interface BulkActionsProps {
    draftCount: number;
    isSubmitting: boolean;
-   onPublishAllDraft: () => Promise<void>;
-   onHideEmpty: () => Promise<void>;
-   onDeleteEmpty: () => Promise<void>;
+   onPublishAllDraft: () => void | Promise<void>;
+   onHideEmpty: () => void | Promise<void>;
+   onDeleteEmpty: () => void | Promise<void>;
 }
 
 export function BulkActions({

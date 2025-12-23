@@ -40,17 +40,18 @@ export function ProductInfoForm({ control }: ProductInfoFormProps) {
                      name="name"
                      control={control}
                      render={({ field, fieldState }) => (
-                        <Field>
+                        <Field data-invalid={fieldState.invalid}>
                            <FieldLabel htmlFor="name">
                               Product Name <span className="text-red-500">*</span>
                            </FieldLabel>
                            <Input
                               id="name"
                               placeholder="e.g., Classic White T-Shirt"
+                              aria-invalid={fieldState.invalid}
                               {...field}
                            />
-                           {fieldState.error && (
-                              <FieldError errors={[{ message: fieldState.error.message }]} />
+                           {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
                            )}
                         </Field>
                      )}

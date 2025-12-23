@@ -1,14 +1,21 @@
 import { z } from "zod";
 
+// 2MB file size limit for image uploads
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+
 export const categoryFormSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Category name is required")
-    .max(100, "Name too long"),
+  name: z.string().min(1, "Category name is required").max(50, "Name too long"),
   description: z.string().max(500, "Description too long").optional(),
   is_active: z.boolean(),
-  image: z.instanceof(File).optional().nullable(),
-  existingImage: z.string().optional().nullable(),
+  image: z
+    .instanceof(File)
+    .optional()
+    .nullable()
+    .refine(
+      (file) => !file || file.size <= MAX_IMAGE_SIZE,
+      "Image must be less than 2MB"
+    ),
+  image_url: z.string().optional().nullable(),
 });
 
 export type CategoryFormData = {
@@ -16,7 +23,7 @@ export type CategoryFormData = {
   description?: string;
   is_active: boolean;
   image?: File | null;
-  existingImage?: string | null;
+  image_url?: string | null;
 };
 
 export interface Category {

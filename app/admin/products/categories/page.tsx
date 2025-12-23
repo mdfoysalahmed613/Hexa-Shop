@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -26,7 +26,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Search, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import {
   CategoryForm,
@@ -37,188 +36,96 @@ import {
   type CategoryFormData,
 } from "@/components/admin/categories";
 import {
-  addCategory,
-  updateCategory,
-  deleteCategory,
-  publishAllDraftCategories,
-  hideEmptyCategories,
-  deleteEmptyCategories,
-  getCategories,
-} from "@/app/actions/add-category";
+  useCategories,
+  useAddCategory,
+  useUpdateCategory,
+  useDeleteCategory,
+  usePublishAllDraftCategories,
+  useHideEmptyCategories,
+  useDeleteEmptyCategories,
+} from "@/hooks/use-categories";
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Dialog states
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
-  // Fetch categories
-  const fetchCategories = useCallback(async () => {
-    setIsLoading(true);
-    const result = await getCategories();
-    if (result.ok) {
-      setCategories(result.data as Category[]);
-    } else {
-      toast.error(result.error || "Failed to fetch categories");
-    }
-    setIsLoading(false);
-  }, []);
+  // TanStack Query hooks
+  const { data: categories = [], isLoading } = useCategories();
+  const addMutation = useAddCategory();
+  const updateMutation = useUpdateCategory();
+  const deleteMutation = useDeleteCategory();
+  const publishAllMutation = usePublishAllDraftCategories();
+  const hideEmptyMutation = useHideEmptyCategories();
+  const deleteEmptyMutation = useDeleteEmptyCategories();
 
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+  // Check if any mutation is pending
+  const isSubmitting =
+    addMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending ||
+    publishAllMutation.isPending ||
+    hideEmptyMutation.isPending ||
+    deleteEmptyMutation.isPending;
 
   // Search filter
-  const filteredCategories = categories.filter((cat) => {
+  const filteredCategories = useMemo(() => {
     const query = searchQuery.toLowerCase();
-    return (
+    return categories.filter((cat) =>
       cat.name.toLowerCase().includes(query) ||
       cat.slug.toLowerCase().includes(query) ||
       (cat.description && cat.description.toLowerCase().includes(query))
     );
-  });
+  }, [categories, searchQuery]);
 
-  const draftCategories = categories.filter((c) => c.is_active === false).length;
+  const draftCategories = useMemo(
+    () => categories.filter((c) => c.is_active === false).length,
+    [categories]
+  );
 
   // Handle add category
   const handleAddSubmit = async (data: CategoryFormData) => {
-    setIsSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append("name", data.name);
-      formData.append("description", data.description || "");
-      formData.append("is_active", String(data.is_active));
-      if (data.image) {
-        formData.append("image", data.image);
-      }
-
-      const result = await addCategory(formData);
-
-      if (result.ok) {
-        toast.success("Category created successfully!");
-        fetchCategories();
-      } else {
-        toast.error(result.error || "Failed to create category");
-      }
-    } catch {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("description", data.description || "");
+    formData.append("is_active", String(data.is_active));
+    if (data.image) {
+      formData.append("image", data.image);
     }
+
+    await addMutation.mutateAsync(formData);
   };
 
   // Handle edit category
   const handleEditSubmit = async (data: CategoryFormData) => {
     if (!selectedCategory) return;
 
-    setIsSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append("name", data.name);
-      formData.append("description", data.description || "");
-      formData.append("is_active", String(data.is_active));
-      if (data.image) {
-        formData.append("image", data.image);
-      }
-      if (data.existingImage) {
-        formData.append("existingImage", data.existingImage);
-      }
-
-      const result = await updateCategory(selectedCategory.id, formData);
-
-      if (result.ok) {
-        toast.success("Category updated successfully!");
-        setIsEditDialogOpen(false);
-        setSelectedCategory(null);
-        fetchCategories();
-      } else {
-        toast.error(result.error || "Failed to update category");
-      }
-    } catch {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("description", data.description || "");
+    formData.append("is_active", String(data.is_active));
+    if (data.image) {
+      formData.append("image", data.image);
     }
+    if (data.image_url) {
+      formData.append("image_url", data.image_url);
+    }
+
+    await updateMutation.mutateAsync({ id: selectedCategory.id, formData });
+    setIsEditDialogOpen(false);
+    setSelectedCategory(null);
   };
 
   // Handle delete category
   const handleDelete = async () => {
     if (!selectedCategory) return;
 
-    setIsSubmitting(true);
-    try {
-      const result = await deleteCategory(selectedCategory.id);
-
-      if (result.ok) {
-        toast.success("Category deleted successfully!");
-        setIsDeleteDialogOpen(false);
-        setSelectedCategory(null);
-        fetchCategories();
-      } else {
-        toast.error(result.error || "Failed to delete category");
-      }
-    } catch {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Bulk actions
-  const handlePublishAllDraft = async () => {
-    setIsSubmitting(true);
-    try {
-      const result = await publishAllDraftCategories();
-      if (result.ok) {
-        toast.success(`Published ${result.count} draft categories!`);
-        fetchCategories();
-      } else {
-        toast.error(result.error || "Failed to publish categories");
-      }
-    } catch {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleHideEmpty = async () => {
-    setIsSubmitting(true);
-    try {
-      const result = await hideEmptyCategories();
-      if (result.ok) {
-        toast.success(`Hidden ${result.count} empty categories!`);
-        fetchCategories();
-      } else {
-        toast.error(result.error || "Failed to hide categories");
-      }
-    } catch {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeleteEmpty = async () => {
-    setIsSubmitting(true);
-    try {
-      const result = await deleteEmptyCategories();
-      if (result.ok) {
-        toast.success(`Deleted ${result.count} empty categories!`);
-        fetchCategories();
-      } else {
-        toast.error(result.error || "Failed to delete categories");
-      }
-    } catch {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
-    }
+    await deleteMutation.mutateAsync(selectedCategory.id);
+    setIsDeleteDialogOpen(false);
+    setSelectedCategory(null);
   };
 
   return (
@@ -301,9 +208,9 @@ export default function CategoriesPage() {
           <BulkActions
             draftCount={draftCategories}
             isSubmitting={isSubmitting}
-            onPublishAllDraft={handlePublishAllDraft}
-            onHideEmpty={handleHideEmpty}
-            onDeleteEmpty={handleDeleteEmpty}
+            onPublishAllDraft={() => publishAllMutation.mutate()}
+            onHideEmpty={() => hideEmptyMutation.mutate()}
+            onDeleteEmpty={() => deleteEmptyMutation.mutate()}
           />
         </div>
       </div>

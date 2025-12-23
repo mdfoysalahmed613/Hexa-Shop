@@ -5,6 +5,7 @@ import {
    CardContent,
    CardDescription,
    CardHeader,
+   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FolderTree, Eye, EyeOff, Package } from "lucide-react";
