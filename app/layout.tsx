@@ -1,5 +1,3 @@
-// Root layout: server-rendered shell for the entire app.
-// Provides theme and user context; keep client-only hooks out of here.
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";

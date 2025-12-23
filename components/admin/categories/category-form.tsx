@@ -43,13 +43,11 @@ export function CategoryForm({
          description: defaultValues?.description || category?.description || "",
          is_active: defaultValues?.is_active ?? category?.is_active ?? true,
          image: null,
-         image_url: category?.image || null,
       },
    });
 
    // Use useWatch for reactive field values
    const imageFile = useWatch({ control, name: "image" });
-   const currentImageUrl = useWatch({ control, name: "image_url" });
 
    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -60,7 +58,6 @@ export function CategoryForm({
 
    const removeImage = () => {
       setValue("image", null);
-      setValue("image_url", null);
       if (fileInputRef.current) {
          fileInputRef.current.value = "";
       }
@@ -68,7 +65,7 @@ export function CategoryForm({
 
    const imagePreview = imageFile
       ? URL.createObjectURL(imageFile)
-      : currentImageUrl;
+      : undefined;
 
    const handleFormSubmit = async (data: CategoryFormData) => {
       await onSubmit(data);

@@ -15,7 +15,6 @@ export const categoryFormSchema = z.object({
       (file) => !file || file.size <= MAX_IMAGE_SIZE,
       "Image must be less than 2MB"
     ),
-  image_url: z.string().optional().nullable(),
 });
 
 export type CategoryFormData = {
@@ -23,7 +22,6 @@ export type CategoryFormData = {
   description?: string;
   is_active: boolean;
   image?: File | null;
-  image_url?: string | null;
 };
 
 export interface Category {

@@ -100,7 +100,6 @@ export function BulkActions({
                   <AlertDialogAction
                      onClick={handleDeleteEmpty}
                      disabled={isSubmitting}
-                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
                      {isSubmitting ? (
                         <>

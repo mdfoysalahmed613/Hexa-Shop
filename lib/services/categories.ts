@@ -72,7 +72,12 @@ export async function addCategory(
       data: { user },
     } = await supabase.auth.getUser();
     if (!isAdmin(user)) {
-      return { ok: false, error: "Only admin users can create categories" };
+      return {
+        ok: false,
+        error: `Only admin users can create categories. Current role: ${
+          user?.app_metadata?.role || "none"
+        }`,
+      };
     }
 
     // Extract form data
@@ -135,7 +140,10 @@ export async function addCategory(
 
     if (insertError) {
       console.error("Insert error:", insertError);
-      return { ok: false, error: "Failed to create category" };
+      return {
+        ok: false,
+        error: `Failed to create category: ${insertError.message}`,
+      };
     }
 
     // Revalidate the categories page cache

@@ -110,9 +110,6 @@ export default function CategoriesPage() {
     if (data.image) {
       formData.append("image", data.image);
     }
-    if (data.image_url) {
-      formData.append("image_url", data.image_url);
-    }
 
     await updateMutation.mutateAsync({ id: selectedCategory.id, formData });
     setIsEditDialogOpen(false);

@@ -1,6 +1,4 @@
 "use client";
-// Client-side user context powered by Supabase auth.
-// Exposes `useUser()` for components; subscribe to auth changes safely.
 
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -61,9 +59,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
    }, []);
 
    return (
-      <UserContext.Provider value={{ user, isLoading, refreshUser }}>
+      <UserContext value={{ user, isLoading, refreshUser }}>
          {children}
-      </UserContext.Provider>
+      </UserContext>
    );
 }
 
