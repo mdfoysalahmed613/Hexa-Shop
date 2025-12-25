@@ -150,8 +150,6 @@ export default function DiscountsPage() {
             return `$${discount.value} off`;
          case "free_shipping":
             return "Free Shipping";
-         default:
-            return discount.value;
       }
    };
 
