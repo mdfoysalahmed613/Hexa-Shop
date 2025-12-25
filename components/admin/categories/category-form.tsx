@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,10 @@ export function CategoryForm({
    showDialogFooter = true,
 }: CategoryFormProps) {
    const fileInputRef = useRef<HTMLInputElement>(null);
+   // Track if user removed existing image
+   const [existingImageRemoved, setExistingImageRemoved] = useState(false);
+   // Store the existing image URL from the category
+   const existingImageUrl = category?.image;
 
    const {
       control,
@@ -53,23 +57,27 @@ export function CategoryForm({
       const file = e.target.files?.[0];
       if (file) {
          setValue("image", file);
+         setExistingImageRemoved(true); // New file replaces existing
       }
    };
 
    const removeImage = () => {
       setValue("image", null);
+      setExistingImageRemoved(true);
       if (fileInputRef.current) {
          fileInputRef.current.value = "";
       }
    };
 
+   // Show new file preview, or existing image URL if not removed
    const imagePreview = imageFile
       ? URL.createObjectURL(imageFile)
-      : undefined;
+      : (!existingImageRemoved && existingImageUrl) || undefined;
 
    const handleFormSubmit = async (data: CategoryFormData) => {
       await onSubmit(data);
       reset();
+      setExistingImageRemoved(false);
    };
 
    const FormContent = (

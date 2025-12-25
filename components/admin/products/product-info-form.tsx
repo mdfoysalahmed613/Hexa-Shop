@@ -15,21 +15,20 @@ import {
    CardContent,
 } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCategories } from "@/hooks/use-categories";
 import type { ProductFormData } from "@/components/admin/products/product-form-schema";
-
-const categories = [
-   { value: "t-shirts", label: "T-Shirts" },
-   { value: "shirts", label: "Shirts" },
-   { value: "pants", label: "Pants" },
-   { value: "shoes", label: "Shoes" },
-   { value: "watches", label: "Watches" },
-];
 
 interface ProductInfoFormProps {
    control: Control<ProductFormData>;
 }
 
 export function ProductInfoForm({ control }: ProductInfoFormProps) {
+   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+
+   // Filter to only show active categories
+   const activeCategories = categories.filter((cat) => cat.is_active);
+
    return (
       <Card>
          <CardContent>
@@ -65,21 +64,31 @@ export function ProductInfoForm({ control }: ProductInfoFormProps) {
                            <FieldLabel htmlFor="category">
                               Category <span className="text-red-500">*</span>
                            </FieldLabel>
-                           <Select
-                              value={field.value}
-                              onValueChange={field.onChange}
-                           >
-                              <SelectTrigger id="category" className="w-full">
-                                 <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                 {categories.map((cat) => (
-                                    <SelectItem key={cat.value} value={cat.value}>
-                                       {cat.label}
-                                    </SelectItem>
-                                 ))}
-                              </SelectContent>
-                           </Select>
+                           {categoriesLoading ? (
+                              <Skeleton className="h-10 w-full" />
+                           ) : (
+                              <Select
+                                 value={field.value}
+                                 onValueChange={field.onChange}
+                              >
+                                 <SelectTrigger id="category" className="w-full">
+                                    <SelectValue placeholder="Select category" />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                    {activeCategories.length === 0 ? (
+                                       <SelectItem value="" disabled>
+                                          No categories available
+                                       </SelectItem>
+                                    ) : (
+                                       activeCategories.map((cat) => (
+                                          <SelectItem key={cat.id} value={cat.id}>
+                                             {cat.name}
+                                          </SelectItem>
+                                       ))
+                                    )}
+                                 </SelectContent>
+                              </Select>
+                           )}
                            {fieldState.error && (
                               <FieldError errors={[{ message: fieldState.error.message }]} />
                            )}

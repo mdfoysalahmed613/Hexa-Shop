@@ -109,6 +109,9 @@ export default function CategoriesPage() {
     formData.append("is_active", String(data.is_active));
     if (data.image) {
       formData.append("image", data.image);
+    } else if (selectedCategory.image) {
+      // Keep existing image if no new image uploaded
+      formData.append("image_url", selectedCategory.image);
     }
 
     await updateMutation.mutateAsync({ id: selectedCategory.id, formData });
