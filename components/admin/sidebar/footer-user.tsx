@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/sidebar"
 import { EllipsisVertical } from 'lucide-react'
 import { useUser } from '@/providers/user-provider'
-import { EditProfileDialog } from '@/components/home/navbar/edit-profile-dialog'
+import { EditProfileDialog } from '@/components/shared/edit-profile-dialog'
 import { ThemeSwitcher } from '@/components/common/theme-switcher'
-import { UserAvatar } from '@/components/home/navbar/user-avatar'
-import { LogoutMenuItem } from '@/components/home/navbar/logout-menu-item'
+import { UserAvatar } from '@/components/shared/user-avatar'
+import { LogoutMenuItem } from '@/components/shared/logout-menu-item'
 
 const FooterUser = () => {
    const { isMobile } = useSidebar()
@@ -84,7 +84,7 @@ const FooterUser = () => {
             </SidebarMenuItem>
          </SidebarMenu>
 
-         
+
       </>
    )
 }

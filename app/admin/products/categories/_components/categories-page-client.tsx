@@ -1,0 +1,189 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import {
+  FolderTree,
+  Package,
+  Eye,
+  EyeOff,
+  SearchIcon,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { StatsCards, type StatItem } from "@/components/shared/stats-cards";
+import { useCategories } from "@/hooks/use-categories";
+import { type Category } from "@/lib/services/categories";
+import { CategoryFormPanel } from "./category-form-panel";
+import { CategoryEditDialog } from "./category-edit-dialog";
+import { CategoryCard } from "./category-card";
+
+export function CategoriesPageClient() {
+  // State
+  const [editCategory, setEditCategory] = useState<Category | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: categories = [], isLoading } = useCategories();
+
+  // Filter categories by search only
+  const filteredCategories = useMemo(() => {
+    return categories.filter((category) => {
+      const matchesSearch =
+        searchQuery === "" ||
+        category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        category.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return matchesSearch;
+    });
+  }, [categories, searchQuery]);
+
+  // Stats
+  const stats: StatItem[] = useMemo(() => {
+    return [
+      {
+        label: "Total Categories",
+        value: categories.length,
+        icon: FolderTree,
+        color: "default",
+      },
+      {
+        label: "Active Categories",
+        value: categories.filter((c) => c.is_active).length,
+        icon: Eye,
+        color: "success",
+      },
+      {
+        label: "Draft Categories",
+        value: categories.filter((c) => !c.is_active).length,
+        icon: EyeOff,
+        color: "warning",
+      },
+      {
+        label: "Total Products",
+        value: categories.reduce((acc, c) => acc + (c.product_count ?? 0), 0),
+        icon: Package,
+        color: "info",
+      },
+    ];
+  }, [categories]);
+
+  const handleEditCategory = (category: Category) => {
+    setEditCategory(category);
+    setEditDialogOpen(true);
+  };
+
+  return (
+    <section className="flex flex-col lg:flex-row gap-6 p-6">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col gap-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
+          <p className="text-muted-foreground">
+            Organize products into categories
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <StatsCards stats={stats} isLoading={isLoading} />
+
+        {/* Search Card */}
+        <Card>
+          <CardContent className="py-4">
+            <InputGroup>
+              <InputGroupAddon>
+                <SearchIcon className="h-4 w-4" />
+              </InputGroupAddon>
+              <InputGroupInput
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search categories..."
+              />
+            </InputGroup>
+          </CardContent>
+        </Card>
+
+        {/* Categories List Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">All Categories</CardTitle>
+            {isLoading ? (
+              <Skeleton className="h-4 w-24" />
+            ) : (
+              <span className="text-sm text-muted-foreground">
+                {filteredCategories.length} categories found
+              </span>
+            )}
+          </CardHeader>
+
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-4 rounded-lg border p-4"
+                  >
+                    <Skeleton className="h-14 w-14 rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-5 w-32" />
+                      <Skeleton className="h-4 w-48" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredCategories.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="rounded-full bg-muted p-4">
+                  <FolderTree className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="mt-4 text-lg font-semibold">
+                  {searchQuery ? "No categories found" : "No categories yet"}
+                </h3>
+                <p className="mt-2 max-w-sm text-center text-sm text-muted-foreground">
+                  {searchQuery
+                    ? "Try adjusting your search."
+                    : "Create your first category to get started."}
+                </p>
+                {searchQuery && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setSearchQuery("")}
+                    className="mt-4"
+                  >
+                    Clear Search
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredCategories.map((category) => (
+                  <CategoryCard
+                    key={category.id}
+                    category={category}
+                    onEdit={handleEditCategory}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Sidebar Form */}
+      <div className="lg:w-[380px] shrink-0">
+        <CategoryFormPanel />
+      </div>
+
+      {/* Edit Category Dialog */}
+      <CategoryEditDialog
+        category={editCategory}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
+    </section>
+  );
+}

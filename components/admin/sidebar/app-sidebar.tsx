@@ -50,7 +50,6 @@ const mainNavItems = [
     icon: Package,
     href: "/admin/products",
     items: [
-      { title: "All Products", href: "/admin/products" },
       { title: "Add New", href: "/admin/products/new" },
       { title: "Categories", href: "/admin/products/categories" },
       { title: "Inventory", href: "/admin/products/inventory" },
@@ -134,10 +133,16 @@ export function AppSidebar() {
                   >
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
-                        <SidebarMenuButton className="group">
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === item.href}
+                          className="group"
+                        >
+                          <Link href={item.href}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                          </Link>
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>

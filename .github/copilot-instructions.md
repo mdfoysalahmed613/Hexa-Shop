@@ -208,7 +208,50 @@ export async function addCategory(formData: FormData) {
 }
 ```
 
-**Note:** `demo_admin` role has read-only access to admin panel but cannot modify data.
+**Note:** `demo_admin` role has **limited write access** to admin panel:
+
+- ✅ Can **create** records (products, categories, etc.)
+- ✅ Can **read** all records
+- ✅ Can **update** existing records
+- ❌ **Cannot delete** any records
+
+For delete operations, check specifically for admin role:
+
+```typescript
+import { isAdmin } from "@/lib/auth/roles";
+
+export async function deleteCategory(id: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Only full admin can delete - demo_admin cannot
+  if (!isAdmin(user)) {
+    return { ok: false, error: "Only admin users can delete records" };
+  }
+  // ... proceed with delete
+}
+```
+
+For create/update operations, use `hasAdminAccess()`:
+
+```typescript
+import { hasAdminAccess } from "@/lib/auth/roles";
+
+export async function addCategory(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Both admin and demo_admin can create/update
+  if (!hasAdminAccess(user)) {
+    return { ok: false, error: "Admin access required" };
+  }
+  // ... proceed with create/update
+}
+```
 
 ## Form Field Pattern with useWatch
 

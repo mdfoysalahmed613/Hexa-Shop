@@ -1,5 +1,5 @@
-import { LoginForm } from "@/components/auth/login-form";
-import { SignUpForm } from "@/components/auth/sign-up-form";
+import { LoginForm } from "./_components/login-form";
+import { SignUpForm } from "./_components/sign-up-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -12,7 +12,7 @@ export default function AuthPage() {
          <div className="absolute left-4 top-4 md:left-8 md:top-8">
             <Button variant="ghost" size="sm" className="gap-2" asChild>
                <Link href="/">
-               <ArrowLeft className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4" />
                   Back
                </Link>
             </Button>
@@ -25,7 +25,7 @@ export default function AuthPage() {
                </TabsList>
                <TabsContent value="login" className="mt-6">
                   <Suspense><LoginForm /></Suspense>
-                  
+
                </TabsContent>
                <TabsContent value="register" className="mt-6">
                   <SignUpForm />

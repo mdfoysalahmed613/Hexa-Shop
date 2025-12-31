@@ -2,477 +2,364 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { isAdmin } from "@/lib/auth/roles";
+import { hasAdminAccess, isAdmin } from "@/lib/auth/roles";
 
-interface AddCategoryResult {
+// ============================================================================
+// Types
+// ============================================================================
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  is_active: boolean;
+  image_url: string | null;
+  parent_id: string | null;
+  created_at: string;
+  parent?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
+  product_count?: number;
+}
+
+interface ActionResult {
   ok: boolean;
   error?: string;
-  categoryId?: string;
 }
 
-/**
- * Converts a string to a URL-friendly slug
- */
-function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "") // Remove special characters
-    .replace(/[\s_-]+/g, "-") // Replace spaces and underscores with hyphens
-    .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
+interface GetCategoriesResult extends ActionResult {
+  data?: Category[];
 }
 
-/**
- * Generates a unique slug by appending a number if the slug already exists
- */
-async function generateUniqueSlug(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  baseName: string
-): Promise<string> {
-  const baseSlug = generateSlug(baseName);
-
-  // Check if base slug exists
-  const { data: existing } = await supabase
-    .from("categories")
-    .select("slug")
-    .like("slug", `${baseSlug}%`);
-
-  if (!existing || existing.length === 0) {
-    return baseSlug;
-  }
-
-  // Find existing slugs that match the pattern
-  const existingSlugs = new Set(existing.map((c) => c.slug));
-
-  // If exact match doesn't exist, use base slug
-  if (!existingSlugs.has(baseSlug)) {
-    return baseSlug;
-  }
-
-  // Find the next available number
-  let counter = 1;
-  let newSlug = `${baseSlug}-${counter}`;
-
-  while (existingSlugs.has(newSlug)) {
-    counter++;
-    newSlug = `${baseSlug}-${counter}`;
-  }
-
-  return newSlug;
+interface GetCategoryResult extends ActionResult {
+  data?: Category;
 }
 
-export async function addCategory(
-  formData: FormData
-): Promise<AddCategoryResult> {
+// ============================================================================
+// Read Operations
+// ============================================================================
+
+export async function getCategories(): Promise<GetCategoriesResult> {
   try {
     const supabase = await createClient();
 
-    // Check admin role (demo_admin cannot modify)
+    const { data, error } = await supabase
+      .from("categories")
+      .select(
+        `
+        *,
+        parent:categories!parent_id(id, name, slug)
+      `
+      )
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching categories:", error);
+      return { ok: false, error: error.message };
+    }
+
+    return { ok: true, data: data as Category[] };
+  } catch (error) {
+    console.error("Unexpected error fetching categories:", error);
+    return { ok: false, error: "Failed to fetch categories" };
+  }
+}
+
+export async function getCategory(id: string): Promise<GetCategoryResult> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("categories")
+      .select(
+        `
+        *,
+        parent:categories!parent_id(id, name, slug)
+      `
+      )
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching category:", error);
+      return { ok: false, error: error.message };
+    }
+
+    return { ok: true, data: data as Category };
+  } catch (error) {
+    console.error("Unexpected error fetching category:", error);
+    return { ok: false, error: "Failed to fetch category" };
+  }
+}
+
+export async function getActiveCategories(): Promise<GetCategoriesResult> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name, slug")
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching active categories:", error);
+      return { ok: false, error: error.message };
+    }
+
+    return { ok: true, data: data as Category[] };
+  } catch (error) {
+    console.error("Unexpected error fetching active categories:", error);
+    return { ok: false, error: "Failed to fetch active categories" };
+  }
+}
+
+// ============================================================================
+// Write Operations
+// ============================================================================
+
+export async function addCategory(formData: FormData): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+
+    // Check admin access
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!isAdmin(user)) {
-      return {
-        ok: false,
-        error: `Only admin users can create categories. Current role: ${
-          user?.app_metadata?.role || "none"
-        }`,
-      };
+
+    if (!hasAdminAccess(user)) {
+      return { ok: false, error: "Admin access required" };
     }
 
     // Extract form data
     const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
-    const image = formData.get("image") as File | null;
-    const isActiveStr = formData.get("is_active") as string;
-    const is_active = isActiveStr === "true";
+    const description = formData.get("description") as string | null;
+    const is_active = formData.get("is_active") === "true";
+    const parent_id = formData.get("parent_id") as string | null;
+    const imageFile = formData.get("image") as File | null;
 
-    // Validate required fields
     if (!name || name.trim() === "") {
       return { ok: false, error: "Category name is required" };
     }
 
-    // Generate unique slug from name
-    const slug = await generateUniqueSlug(supabase, name);
+    let image_url: string | null = null;
 
-    let imageUrl: string | null = null;
-
-    // Upload image to Supabase Storage if provided
-    if (image && image.size > 0) {
-      const fileExt = image.name.split(".").pop();
-      const fileName = `${slug}-${Date.now()}.${fileExt}`;
-      const filePath = `${slug}/${fileName}`;
+    // Upload image if provided
+    if (imageFile && imageFile.size > 0) {
+      const fileExt = imageFile.name.split(".").pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("category-images")
-        .upload(filePath, image, {
+        .upload(fileName, imageFile, {
           cacheControl: "3600",
           upsert: false,
         });
 
       if (uploadError) {
-        console.error("Upload error:", uploadError);
-        return { ok: false, error: `Failed to upload image: ${image.name}` };
+        console.error("Error uploading image:", uploadError);
+        return { ok: false, error: "Failed to upload image" };
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("category-images")
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("category-images").getPublicUrl(fileName);
 
-      imageUrl = urlData.publicUrl;
+      image_url = publicUrl;
     }
 
-    // Insert category into database
-    const categoryData = {
-      name,
-      slug,
-      description: description || null,
-      image: imageUrl,
+    // Insert category (slug is auto-generated by Supabase)
+    const { error } = await supabase.from("categories").insert({
+      name: name.trim(),
+      description: description?.trim() || null,
       is_active,
-    };
+      parent_id: parent_id || null,
+      image_url,
+    });
 
-    const { data: category, error: insertError } = await supabase
-      .from("categories")
-      .insert([categoryData])
-      .select("id")
-      .single();
-
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      return {
-        ok: false,
-        error: `Failed to create category: ${insertError.message}`,
-      };
+    if (error) {
+      console.error("Error adding category:", error);
+      return { ok: false, error: error.message };
     }
 
-    // Revalidate the categories page cache
     revalidatePath("/admin/products/categories");
-
-    return { ok: true, categoryId: category.id };
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    console.error("Add category error:", e);
-    return {
-      ok: false,
-      error: message,
-    };
+    return { ok: true };
+  } catch (error) {
+    console.error("Unexpected error adding category:", error);
+    return { ok: false, error: "Failed to add category" };
   }
-}
-
-interface UpdateCategoryResult {
-  ok: boolean;
-  error?: string;
 }
 
 export async function updateCategory(
   id: string,
   formData: FormData
-): Promise<UpdateCategoryResult> {
+): Promise<ActionResult> {
   try {
     const supabase = await createClient();
 
-    // Check admin role (demo_admin cannot modify)
+    // Check admin access
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!isAdmin(user)) {
-      return { ok: false, error: "Only admin users can update categories" };
+
+    if (!hasAdminAccess(user)) {
+      return { ok: false, error: "Admin access required" };
     }
 
     // Extract form data
     const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
-    const image = formData.get("image") as File | null;
-    const imageUrl = formData.get("image_url") as string | null;
-    const isActiveStr = formData.get("is_active") as string;
-    const is_active = isActiveStr === "true";
+    const description = formData.get("description") as string | null;
+    const is_active = formData.get("is_active") === "true";
+    const parent_id = formData.get("parent_id") as string | null;
+    const imageFile = formData.get("image") as File | null;
+    const existingImageUrl = formData.get("image_url") as string | null;
 
-    // Validate required fields
     if (!name || name.trim() === "") {
       return { ok: false, error: "Category name is required" };
     }
 
-    // Generate slug from name
-    const slug = generateSlug(name);
-
-    // Check if slug already exists for a different category
-    const { data: existingSlug } = await supabase
-      .from("categories")
-      .select("id")
-      .eq("slug", slug)
-      .neq("id", id)
-      .single();
-
-    if (existingSlug) {
-      return { ok: false, error: "A category with this name already exists" };
+    // Prevent category from being its own parent
+    if (parent_id === id) {
+      return { ok: false, error: "Category cannot be its own parent" };
     }
 
-    let finalImageUrl: string | null = imageUrl;
+    let image_url: string | null = existingImageUrl;
 
     // Upload new image if provided
-    if (image && image.size > 0) {
-      const fileExt = image.name.split(".").pop();
-      const fileName = `${slug}-${Date.now()}.${fileExt}`;
-      const filePath = `${slug}/${fileName}`;
+    if (imageFile && imageFile.size > 0) {
+      const fileExt = imageFile.name.split(".").pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("category-images")
-        .upload(filePath, image, {
+        .upload(fileName, imageFile, {
           cacheControl: "3600",
           upsert: false,
         });
 
       if (uploadError) {
-        console.error("Upload error:", uploadError);
-        return { ok: false, error: `Failed to upload image: ${image.name}` };
+        console.error("Error uploading image:", uploadError);
+        return { ok: false, error: "Failed to upload image" };
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("category-images")
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("category-images").getPublicUrl(fileName);
 
-      finalImageUrl = urlData.publicUrl;
+      image_url = publicUrl;
     }
 
     // Update category
-    const categoryData = {
-      name,
-      slug,
-      description: description || null,
-      image: finalImageUrl,
-      is_active,
-    };
-
-    const { error: updateError } = await supabase
+    const { error } = await supabase
       .from("categories")
-      .update(categoryData)
+      .update({
+        name: name.trim(),
+        description: description?.trim() || null,
+        is_active,
+        parent_id: parent_id || null,
+        image_url,
+      })
       .eq("id", id);
 
-    if (updateError) {
-      console.error("Update error:", updateError);
-      return { ok: false, error: "Failed to update category" };
+    if (error) {
+      console.error("Error updating category:", error);
+      return { ok: false, error: error.message };
     }
 
     revalidatePath("/admin/products/categories");
-
     return { ok: true };
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    console.error("Update category error:", e);
-    return { ok: false, error: message };
+  } catch (error) {
+    console.error("Unexpected error updating category:", error);
+    return { ok: false, error: "Failed to update category" };
   }
 }
 
-interface DeleteCategoryResult {
-  ok: boolean;
-  error?: string;
-}
-
-export async function deleteCategory(
-  id: string
-): Promise<DeleteCategoryResult> {
+export async function deleteCategory(id: string): Promise<ActionResult> {
   try {
     const supabase = await createClient();
 
-    // Check admin role (demo_admin cannot modify)
+    // Only full admin can delete
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
     if (!isAdmin(user)) {
-      return { ok: false, error: "Only admin users can delete categories" };
+      return { ok: false, error: "Only admin users can delete records" };
     }
 
-    const { error: deleteError } = await supabase
+    // Check if category has children
+    const { data: children } = await supabase
       .from("categories")
-      .delete()
+      .select("id")
+      .eq("parent_id", id)
+      .limit(1);
+
+    if (children && children.length > 0) {
+      return {
+        ok: false,
+        error:
+          "Cannot delete category with subcategories. Delete or reassign subcategories first.",
+      };
+    }
+
+    // Delete category (CASCADE will handle products)
+    const { error } = await supabase.from("categories").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error deleting category:", error);
+      return { ok: false, error: error.message };
+    }
+
+    revalidatePath("/admin/products/categories");
+    return { ok: true };
+  } catch (error) {
+    console.error("Unexpected error deleting category:", error);
+    return { ok: false, error: "Failed to delete category" };
+  }
+}
+
+export async function toggleCategoryStatus(id: string): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+
+    // Check admin access
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!hasAdminAccess(user)) {
+      return { ok: false, error: "Admin access required" };
+    }
+
+    // Get current status
+    const { data: category, error: fetchError } = await supabase
+      .from("categories")
+      .select("is_active")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) {
+      return { ok: false, error: "Category not found" };
+    }
+
+    // Toggle status
+    const { error } = await supabase
+      .from("categories")
+      .update({ is_active: !category.is_active })
       .eq("id", id);
 
-    if (deleteError) {
-      console.error("Delete error:", deleteError);
-      return { ok: false, error: "Failed to delete category" };
+    if (error) {
+      console.error("Error toggling category status:", error);
+      return { ok: false, error: error.message };
     }
 
     revalidatePath("/admin/products/categories");
-
     return { ok: true };
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    console.error("Delete category error:", e);
-    return { ok: false, error: message };
-  }
-}
-
-interface BulkActionResult {
-  ok: boolean;
-  error?: string;
-  count?: number;
-}
-
-export async function publishAllDraftCategories(): Promise<BulkActionResult> {
-  try {
-    const supabase = await createClient();
-
-    // Check admin role (demo_admin cannot modify)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!isAdmin(user)) {
-      return { ok: false, error: "Only admin users can publish categories" };
-    }
-
-    const { data, error } = await supabase
-      .from("categories")
-      .update({ is_active: true })
-      .eq("is_active", false)
-      .select("id");
-
-    if (error) {
-      console.error("Publish error:", error);
-      return { ok: false, error: "Failed to publish categories" };
-    }
-
-    revalidatePath("/admin/products/categories");
-
-    return { ok: true, count: data?.length || 0 };
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    console.error("Publish categories error:", e);
-    return { ok: false, error: message };
-  }
-}
-
-export async function hideEmptyCategories(): Promise<BulkActionResult> {
-  try {
-    const supabase = await createClient();
-
-    // Check admin role (demo_admin cannot modify)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!isAdmin(user)) {
-      return { ok: false, error: "Only admin users can hide categories" };
-    }
-
-    // Get categories with 0 products using a subquery
-    const { data: allCategories, error: fetchError } = await supabase
-      .from("categories")
-      .select("id, products(id)");
-
-    if (fetchError) {
-      console.error("Fetch error:", fetchError);
-      return { ok: false, error: "Failed to fetch categories" };
-    }
-
-    const emptyCategories =
-      allCategories?.filter((c) => !c.products || c.products.length === 0) ||
-      [];
-
-    if (emptyCategories.length === 0) {
-      return { ok: true, count: 0 };
-    }
-
-    const ids = emptyCategories.map((c) => c.id);
-
-    const { error: updateError } = await supabase
-      .from("categories")
-      .update({ is_active: false })
-      .in("id", ids);
-
-    if (updateError) {
-      console.error("Update error:", updateError);
-      return { ok: false, error: "Failed to hide empty categories" };
-    }
-
-    revalidatePath("/admin/products/categories");
-
-    return { ok: true, count: emptyCategories.length };
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    console.error("Hide empty categories error:", e);
-    return { ok: false, error: message };
-  }
-}
-
-export async function deleteEmptyCategories(): Promise<BulkActionResult> {
-  try {
-    const supabase = await createClient();
-
-    // Check admin role (demo_admin cannot modify)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!isAdmin(user)) {
-      return { ok: false, error: "Only admin users can delete categories" };
-    }
-
-    // Get categories with 0 products using a subquery
-    const { data: allCategories, error: fetchError } = await supabase
-      .from("categories")
-      .select("id, products(id)");
-
-    if (fetchError) {
-      console.error("Fetch error:", fetchError);
-      return { ok: false, error: "Failed to fetch categories" };
-    }
-
-    const emptyCategories =
-      allCategories?.filter((c) => !c.products || c.products.length === 0) ||
-      [];
-
-    if (emptyCategories.length === 0) {
-      return { ok: true, count: 0 };
-    }
-
-    const ids = emptyCategories.map((c) => c.id);
-
-    const { error: deleteError } = await supabase
-      .from("categories")
-      .delete()
-      .in("id", ids);
-
-    if (deleteError) {
-      console.error("Delete error:", deleteError);
-      return { ok: false, error: "Failed to delete empty categories" };
-    }
-
-    revalidatePath("/admin/products/categories");
-
-    return { ok: true, count: emptyCategories.length };
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    console.error("Delete empty categories error:", e);
-    return { ok: false, error: message };
-  }
-}
-
-export async function getCategories() {
-  try {
-    const supabase = await createClient();
-
-    // Fetch categories with product count via JOIN
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*, products(id)")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Fetch error:", error);
-      return { ok: false, error: "Failed to fetch categories", data: [] };
-    }
-
-    // Transform data to include product_count
-    const categoriesWithCount = (data || []).map((category) => ({
-      ...category,
-      product_count: category.products?.length || 0,
-      products: undefined, // Remove products array from response
-    }));
-
-    return { ok: true, data: categoriesWithCount };
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    console.error("Get categories error:", e);
-    return { ok: false, error: message, data: [] };
+  } catch (error) {
+    console.error("Unexpected error toggling category status:", error);
+    return { ok: false, error: "Failed to toggle category status" };
   }
 }

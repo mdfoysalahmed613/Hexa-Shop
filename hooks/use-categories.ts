@@ -1,15 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCategories,
+  getCategory,
   addCategory,
   updateCategory,
   deleteCategory,
-  publishAllDraftCategories,
-  hideEmptyCategories,
-  deleteEmptyCategories,
+  toggleCategoryStatus,
+  type Category,
 } from "@/lib/services/categories";
 import { toast } from "sonner";
-import type { Category } from "@/components/admin/categories";
 
 export const CATEGORIES_QUERY_KEY = ["categories"] as const;
 
@@ -23,6 +22,21 @@ export function useCategories() {
       }
       return result.data as Category[];
     },
+  });
+}
+
+export function useCategory(id: string | null) {
+  return useQuery({
+    queryKey: [...CATEGORIES_QUERY_KEY, id],
+    queryFn: async () => {
+      if (!id) return null;
+      const result = await getCategory(id);
+      if (!result.ok) {
+        throw new Error(result.error || "Failed to fetch category");
+      }
+      return result.data as Category;
+    },
+    enabled: !!id,
   });
 }
 
@@ -95,62 +109,20 @@ export function useDeleteCategory() {
   });
 }
 
-export function usePublishAllDraftCategories() {
+export function useToggleCategoryStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      const result = await publishAllDraftCategories();
+    mutationFn: async (id: string) => {
+      const result = await toggleCategoryStatus(id);
       if (!result.ok) {
-        throw new Error(result.error || "Failed to publish categories");
+        throw new Error(result.error || "Failed to toggle category status");
       }
       return result;
     },
-    onSuccess: (result) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
-      toast.success(`Published ${result.count} draft categories!`);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-}
-
-export function useHideEmptyCategories() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      const result = await hideEmptyCategories();
-      if (!result.ok) {
-        throw new Error(result.error || "Failed to hide categories");
-      }
-      return result;
-    },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
-      toast.success(`Hidden ${result.count} empty categories!`);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-}
-
-export function useDeleteEmptyCategories() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      const result = await deleteEmptyCategories();
-      if (!result.ok) {
-        throw new Error(result.error || "Failed to delete categories");
-      }
-      return result;
-    },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
-      toast.success(`Deleted ${result.count} empty categories!`);
+      toast.success("Category status updated!");
     },
     onError: (error: Error) => {
       toast.error(error.message);
