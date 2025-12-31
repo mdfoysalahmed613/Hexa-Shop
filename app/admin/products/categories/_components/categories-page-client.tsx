@@ -20,6 +20,59 @@ import { CategoryFormPanel } from "./category-form-panel";
 import { CategoryEditDialog } from "./category-edit-dialog";
 import { CategoryCard } from "./category-card";
 
+// Build hierarchical tree from flat categories
+interface CategoryNode extends Category {
+  children: CategoryNode[];
+}
+
+function buildCategoryTree(categories: Category[]): CategoryNode[] {
+  const categoryMap = new Map<string, CategoryNode>();
+  const roots: CategoryNode[] = [];
+
+  // Create nodes with empty children
+  categories.forEach((cat) => {
+    categoryMap.set(cat.id, { ...cat, children: [] });
+  });
+
+  // Build tree structure
+  categories.forEach((cat) => {
+    const node = categoryMap.get(cat.id)!;
+    if (cat.parent_id && categoryMap.has(cat.parent_id)) {
+      categoryMap.get(cat.parent_id)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  // Sort children alphabetically
+  const sortNodes = (nodes: CategoryNode[]): CategoryNode[] => {
+    return nodes
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((node) => ({
+        ...node,
+        children: sortNodes(node.children),
+      }));
+  };
+
+  return sortNodes(roots);
+}
+
+// Flatten tree back to array with level info for rendering
+function flattenTree(
+  nodes: CategoryNode[],
+  level = 0
+): { category: Category; level: number }[] {
+  const result: { category: Category; level: number }[] = [];
+
+  nodes.forEach((node) => {
+    const { children, ...category } = node;
+    result.push({ category, level });
+    result.push(...flattenTree(children, level + 1));
+  });
+
+  return result;
+}
+
 export function CategoriesPageClient() {
   // State
   const [editCategory, setEditCategory] = useState<Category | null>(null);
@@ -28,16 +81,22 @@ export function CategoriesPageClient() {
 
   const { data: categories = [], isLoading } = useCategories();
 
-  // Filter categories by search only
-  const filteredCategories = useMemo(() => {
-    return categories.filter((category) => {
-      const matchesSearch =
-        searchQuery === "" ||
-        category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        category.description?.toLowerCase().includes(searchQuery.toLowerCase());
+  // Build hierarchical category list with levels
+  const hierarchicalCategories = useMemo(() => {
+    // If searching, filter categories first but show flat results
+    if (searchQuery) {
+      const filtered = categories.filter((category) => {
+        return (
+          category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          category.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      });
+      return filtered.map((category) => ({ category, level: 0 }));
+    }
 
-      return matchesSearch;
-    });
+    // Build and flatten the tree for hierarchical display
+    const tree = buildCategoryTree(categories);
+    return flattenTree(tree);
   }, [categories, searchQuery]);
 
   // Stats
@@ -92,7 +151,7 @@ export function CategoriesPageClient() {
 
         {/* Search Card */}
         <Card>
-          <CardContent className="py-4">
+          <CardContent>
             <InputGroup>
               <InputGroupAddon>
                 <SearchIcon className="h-4 w-4" />
@@ -114,7 +173,7 @@ export function CategoriesPageClient() {
               <Skeleton className="h-4 w-24" />
             ) : (
               <span className="text-sm text-muted-foreground">
-                {filteredCategories.length} categories found
+                {hierarchicalCategories.length} categories found
               </span>
             )}
           </CardHeader>
@@ -135,7 +194,7 @@ export function CategoriesPageClient() {
                   </div>
                 ))}
               </div>
-            ) : filteredCategories.length === 0 ? (
+            ) : hierarchicalCategories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="rounded-full bg-muted p-4">
                   <FolderTree className="h-8 w-8 text-muted-foreground" />
@@ -160,11 +219,12 @@ export function CategoriesPageClient() {
               </div>
             ) : (
               <div className="space-y-2">
-                {filteredCategories.map((category) => (
+                {hierarchicalCategories.map(({ category, level }) => (
                   <CategoryCard
                     key={category.id}
                     category={category}
                     onEdit={handleEditCategory}
+                    level={level}
                   />
                 ))}
               </div>

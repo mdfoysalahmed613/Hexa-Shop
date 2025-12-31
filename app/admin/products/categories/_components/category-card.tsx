@@ -7,8 +7,9 @@ import {
    Trash2,
    ImageIcon,
    Loader2,
-   ChevronRight,
    MoreHorizontal,
+   Eye,
+   EyeOff,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { type Category } from "@/lib/services/categories";
-import { useDeleteCategory } from "@/hooks/use-categories";
+import { useDeleteCategory, useToggleCategoryStatus } from "@/hooks/use-categories";
 
 interface CategoryCardProps {
    category: Category;
@@ -54,10 +55,15 @@ export function CategoryCard({
    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
    const deleteMutation = useDeleteCategory();
+   const toggleStatusMutation = useToggleCategoryStatus();
 
    const handleConfirmDelete = async () => {
       await deleteMutation.mutateAsync(category.id);
       setDeleteDialogOpen(false);
+   };
+
+   const handleToggleStatus = async () => {
+      await toggleStatusMutation.mutateAsync(category.id);
    };
 
    return (
@@ -69,12 +75,6 @@ export function CategoryCard({
             )}
             style={{ marginLeft: level * 24 }}
          >
-            {/* Hierarchy Indicator */}
-            {level > 0 && (
-               <div className="flex items-center text-muted-foreground">
-                  <ChevronRight className="h-4 w-4" />
-               </div>
-            )}
             {/* Image */}
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
                {category.image_url ? (
@@ -159,11 +159,27 @@ export function CategoryCard({
                   <DropdownMenuContent align="end">
                      <DropdownMenuItem onClick={() => onEdit(category)}>
                         <Pencil className="mr-2 h-4 w-4" />
-                        Edit
+                        Edit category
+                     </DropdownMenuItem>
+                     <DropdownMenuItem
+                        onClick={handleToggleStatus}
+                        disabled={toggleStatusMutation.isPending}
+                     >
+                        {category.is_active ? (
+                           <>
+                              <EyeOff className="mr-2 h-4 w-4" />
+                              Inactive
+                           </>
+                        ) : (
+                           <>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Active
+                           </>
+                        )}
                      </DropdownMenuItem>
                      <DropdownMenuSeparator />
                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
+                        variant="destructive"
                         onClick={() => setDeleteDialogOpen(true)}
                         disabled={deleteMutation.isPending}
                      >

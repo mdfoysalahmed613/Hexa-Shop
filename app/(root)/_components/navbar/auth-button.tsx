@@ -18,7 +18,7 @@ import { EditProfileDialog } from "@/components/shared/edit-profile-dialog";
 import { BecomeDemoAdminClient } from "@/components/shared/become-demo-admin-client";
 import { hasAdminAccess, isAdmin, isDemoAdmin } from "@/lib/auth/roles";
 import { useUser } from "@/providers/user-provider";
-import { becomeDemoAdmin } from "@/app/actions/demo-admin";
+import { becomeDemoAdmin } from "@/app/(root)/_actions/demo-admin";
 
 export default function AuthButton() {
    const { user, isLoading } = useUser();

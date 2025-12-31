@@ -150,7 +150,7 @@ export async function addCategory(formData: FormData): Promise<ActionResult> {
     // Upload image if provided
     if (imageFile && imageFile.size > 0) {
       const fileExt = imageFile.name.split(".").pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const fileName = `${name}/${name}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("category-images")
