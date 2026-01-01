@@ -52,12 +52,30 @@ import type { Product } from "@/lib/services/products";
 type StatusFilter = "all" | "active" | "inactive";
 type StockFilter = "all" | "in-stock" | "low-stock" | "out-of-stock";
 
-function getStockStatus(stock: number | null): {
+// Helper to get total stock from variants
+function getTotalStock(product: Product): number {
+   if (!product.variants || product.variants.length === 0) return 0;
+   return product.variants.reduce((sum, v) => sum + (v.stock ?? 0), 0);
+}
+
+// Helper to get price range or single price from variants
+function getPriceDisplay(product: Product): { min: number; max: number } | null {
+   if (!product.variants || product.variants.length === 0) return null;
+   const prices = product.variants.map((v) => v.price);
+   return { min: Math.min(...prices), max: Math.max(...prices) };
+}
+
+// Helper to get compare price from first variant
+function getComparePrice(product: Product): number | null {
+   if (!product.variants || product.variants.length === 0) return null;
+   return product.variants[0].compare_price;
+}
+
+function getStockStatus(stock: number): {
    label: string;
    variant: "default" | "secondary" | "destructive";
 } {
-   if (stock === null || stock === 0)
-      return { label: "Out of Stock", variant: "destructive" };
+   if (stock === 0) return { label: "Out of Stock", variant: "destructive" };
    if (stock <= 10) return { label: "Low Stock", variant: "secondary" };
    return { label: "In Stock", variant: "default" };
 }
@@ -83,8 +101,7 @@ export function ProductsPageClient() {
             searchQuery === "" ||
             product.name.toLowerCase().includes(query) ||
             product.slug.toLowerCase().includes(query) ||
-            product.category_name?.toLowerCase().includes(query) ||
-            product.sku?.toLowerCase().includes(query);
+            product.category_name?.toLowerCase().includes(query);
 
          // Status filter
          const matchesStatus =
@@ -92,29 +109,31 @@ export function ProductsPageClient() {
             (statusFilter === "active" && product.is_active) ||
             (statusFilter === "inactive" && !product.is_active);
 
-         // Stock filter
+         // Stock filter - calculate from variants
+         const totalStock = getTotalStock(product);
          const matchesStock =
             stockFilter === "all" ||
-            (stockFilter === "in-stock" && (product.stock ?? 0) > 10) ||
-            (stockFilter === "low-stock" &&
-               (product.stock ?? 0) > 0 &&
-               (product.stock ?? 0) <= 10) ||
-            (stockFilter === "out-of-stock" && (product.stock ?? 0) === 0);
+            (stockFilter === "in-stock" && totalStock > 10) ||
+            (stockFilter === "low-stock" && totalStock > 0 && totalStock <= 10) ||
+            (stockFilter === "out-of-stock" && totalStock === 0);
 
          // Category filter
          const matchesCategory =
-            categoryFilter === "all" || product.category === categoryFilter;
+            categoryFilter === "all" ||
+            product.category_id === categoryFilter ||
+            product.category === categoryFilter;
 
          return matchesSearch && matchesStatus && matchesStock && matchesCategory;
       });
    }, [products, searchQuery, statusFilter, stockFilter, categoryFilter]);
 
-   // Stats
+   // Stats - calculate from variants
    const stats = useMemo(() => {
-      const lowStock = products.filter(
-         (p) => (p.stock ?? 0) > 0 && (p.stock ?? 0) <= 10
-      ).length;
-      const outOfStock = products.filter((p) => (p.stock ?? 0) === 0).length;
+      const lowStock = products.filter((p) => {
+         const stock = getTotalStock(p);
+         return stock > 0 && stock <= 10;
+      }).length;
+      const outOfStock = products.filter((p) => getTotalStock(p) === 0).length;
       const active = products.filter((p) => p.is_active).length;
 
       return {
@@ -352,7 +371,12 @@ export function ProductsPageClient() {
                   ) : (
                      <div className="space-y-3">
                         {filteredProducts.map((product) => {
-                           const stockStatus = getStockStatus(product.stock);
+                           const totalStock = getTotalStock(product);
+                           const stockStatus = getStockStatus(totalStock);
+                           const priceDisplay = getPriceDisplay(product);
+                           const comparePrice = getComparePrice(product);
+                           const hasVariants = product.variants && product.variants.length > 1;
+
                            return (
                               <div
                                  key={product.id}
@@ -378,37 +402,43 @@ export function ProductsPageClient() {
                                        <p className="font-medium">{product.name}</p>
                                        <p className="text-sm text-muted-foreground">
                                           {product.category_name}
-                                          {product.sku && ` • SKU: ${product.sku}`}
                                        </p>
                                     </div>
                                  </div>
 
                                  <div className="flex items-center gap-4">
                                     <div className="text-right">
-                                       <p className="font-medium">
-                                          ${product.price.toFixed(2)}
-                                          {product.compare_price && (
-                                             <span className="ml-2 text-sm text-muted-foreground line-through">
-                                                ${product.compare_price.toFixed(2)}
-                                             </span>
-                                          )}
-                                       </p>
+                                       {priceDisplay ? (
+                                          <p className="font-medium">
+                                             {priceDisplay.min === priceDisplay.max ? (
+                                                <>
+                                                   ${priceDisplay.min.toFixed(2)}
+                                                   {comparePrice && (
+                                                      <span className="ml-2 text-sm text-muted-foreground line-through">
+                                                         ${comparePrice.toFixed(2)}
+                                                      </span>
+                                                   )}
+                                                </>
+                                             ) : (
+                                                <>${priceDisplay.min.toFixed(2)} - ${priceDisplay.max.toFixed(2)}</>
+                                             )}
+                                          </p>
+                                       ) : (
+                                          <p className="font-medium text-muted-foreground">No price</p>
+                                       )}
                                        <p className="text-sm text-muted-foreground">
-                                          {product.variants && product.variants.length > 0
-                                             ? `${product.variants.length} variant(s)`
-                                             : `Stock: ${product.stock ?? 0}`}
+                                          {hasVariants
+                                             ? `${product.variants?.length} variant(s) • Stock: ${totalStock}`
+                                             : `Stock: ${totalStock}`}
                                        </p>
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                       {(!product.variants ||
-                                          product.variants.length === 0) && (
-                                             <Badge variant={stockStatus.variant}>
-                                                {stockStatus.label}
-                                             </Badge>
-                                          )}
-                                       {product.variants && product.variants.length > 0 && (
-                                          <Badge variant="secondary">Has Variants</Badge>
+                                       <Badge variant={stockStatus.variant}>
+                                          {stockStatus.label}
+                                       </Badge>
+                                       {hasVariants && (
+                                          <Badge variant="secondary">Variants</Badge>
                                        )}
                                        {!product.is_active && (
                                           <Badge variant="outline">Draft</Badge>

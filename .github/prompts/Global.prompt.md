@@ -9,9 +9,5 @@ When reviewing the code changes, please consider the following:
 2. Check for potential bugs or issues that may arise from the changes.
 3. Suggest improvements or optimizations where applicable.
 
-in the categories page the category table was not showing the subcategory hirerarchy properly, in ui should show like this:- Electronics
-  - Mobile Phones
-    - Smartphones
-    - Feature Phones this kind of hirerarchy, please fix it.
-
+now fix the /products page based on the recent changes made to the codebase.
 

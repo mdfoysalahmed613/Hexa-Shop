@@ -141,10 +141,6 @@ export async function addCategory(formData: FormData): Promise<ActionResult> {
     const parent_id = formData.get("parent_id") as string | null;
     const imageFile = formData.get("image") as File | null;
 
-    if (!name || name.trim() === "") {
-      return { ok: false, error: "Category name is required" };
-    }
-
     let image_path: string | null = null;
 
     // Upload image if provided
@@ -212,10 +208,6 @@ export async function updateCategory(
     const parent_id = formData.get("parent_id") as string | null;
     const imageFile = formData.get("image") as File | null;
     const existingImagePath = formData.get("image_path") as string | null;
-
-    if (!name || name.trim() === "") {
-      return { ok: false, error: "Category name is required" };
-    }
 
     // Prevent category from being its own parent
     if (parent_id === id) {
