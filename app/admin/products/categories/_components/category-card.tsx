@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 
 import { type Category } from "@/lib/services/categories";
 import { useDeleteCategory, useToggleCategoryStatus } from "@/hooks/use-categories";
+import { createClient } from "@/lib/supabase/client";
 
 interface CategoryCardProps {
    category: Category;
@@ -65,6 +66,12 @@ export function CategoryCard({
    const handleToggleStatus = async () => {
       await toggleStatusMutation.mutateAsync(category.id);
    };
+   const supabase = createClient();
+   const imageUrl = category.image_path
+      ? supabase.storage
+           .from("category-images")
+           .getPublicUrl(category.image_path).data.publicUrl
+      : null;
 
    return (
       <>
@@ -77,9 +84,9 @@ export function CategoryCard({
          >
             {/* Image */}
             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-muted">
-               {category.image_url ? (
+               {imageUrl ? (
                   <Image
-                     src={category.image_url}
+                     src={imageUrl}
                      alt={category.name}
                      fill
                      className="object-cover"

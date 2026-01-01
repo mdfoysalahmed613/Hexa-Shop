@@ -4,7 +4,7 @@ CREATE TABLE categories (
    slug text UNIQUE NOT NULL,
    description text,
    is_active BOOLEAN not null DEFAULT TRUE,
-   image_url text,
+   image_path text,
    parent_id uuid REFERENCES categories(id) ON DELETE cascade,
    created_at timestamptz DEFAULT now(),
 );
@@ -35,7 +35,7 @@ CREATE TABLE product_images (
    product_id uuid not null REFERENCES products(id) ON
    DELETE
       CASCADE,
-      image_url text NOT NULL,
+      image_path text NOT NULL,
       is_primary BOOLEAN NOT NULL DEFAULT FALSE,
       created_at timestamptz DEFAULT now(),
 );

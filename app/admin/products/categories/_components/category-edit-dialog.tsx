@@ -38,6 +38,8 @@ import {
 } from "./category-form-schema";
 import { type Category } from "@/lib/services/categories";
 import { useUpdateCategory, useCategories } from "@/hooks/use-categories";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface CategoryEditDialogProps {
    category: Category | null;
@@ -67,15 +69,21 @@ export function CategoryEditDialog({
    });
 
    const imageFile = useWatch({ control, name: "image" });
-   const currentImageUrl = useWatch({ control, name: "image_url" });
+   const currentImagePath = useWatch({ control, name: "image_path" });
 
    // Compute image preview from form state
    const imagePreview = useMemo(() => {
       if (imageFile && imageFile instanceof File && imageFile.size > 0) {
          return URL.createObjectURL(imageFile);
       }
-      return currentImageUrl || null;
-   }, [imageFile, currentImageUrl]);
+      if (currentImagePath) {
+         const supabase = createClient();
+         return supabase.storage
+            .from("category-images")
+            .getPublicUrl(currentImagePath).data.publicUrl;
+      }
+      return null;
+   }, [imageFile, currentImagePath]);
 
    // Reset form when category changes
    useEffect(() => {
@@ -86,7 +94,7 @@ export function CategoryEditDialog({
             is_active: category.is_active,
             parent_id: category.parent_id,
             image: null,
-            image_url: category.image_url,
+            image_path: category.image_path,
          });
       }
    }, [category, open, reset]);
@@ -104,8 +112,9 @@ export function CategoryEditDialog({
          formData.append("image", data.image);
       }
 
-      if (data.image_url) {
-         formData.append("image_url", data.image_url);
+      // Always send the original image path so server can delete it when uploading new image
+      if (category.image_path) {
+         formData.append("image_path", category.image_path);
       }
 
       try {
@@ -120,7 +129,7 @@ export function CategoryEditDialog({
       const file = e.target.files?.[0];
       if (file) {
          if (file.size > 2 * 1024 * 1024) {
-            alert("Image must be less than 2MB");
+            toast.error("Image must be less than 2MB");
             return;
          }
          setValue("image", file, { shouldDirty: true });
@@ -129,7 +138,7 @@ export function CategoryEditDialog({
 
    const handleRemoveImage = () => {
       setValue("image", null, { shouldDirty: true });
-      setValue("image_url", null, { shouldDirty: true });
+      setValue("image_path", null, { shouldDirty: true });
       if (fileInputRef.current) {
          fileInputRef.current.value = "";
       }
