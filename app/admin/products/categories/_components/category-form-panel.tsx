@@ -60,7 +60,7 @@ export function CategoryFormPanel({ onSuccess }: CategoryFormPanelProps) {
    });
 
    const imageFile = useWatch({ control, name: "image" });
-   const currentImageUrl = useWatch({ control, name: "image_path" });
+   const currentImageUrl = useWatch({ control, name: "image_url" });
 
    // Compute image preview from form state
    const imagePreview = useMemo(() => {
@@ -81,8 +81,8 @@ export function CategoryFormPanel({ onSuccess }: CategoryFormPanelProps) {
          formData.append("image", data.image);
       }
 
-      if (data.image_path) {
-         formData.append("image_path", data.image_path);
+      if (data.image_url) {
+         formData.append("image_url", data.image_url);
       }
 
       try {
@@ -107,7 +107,7 @@ export function CategoryFormPanel({ onSuccess }: CategoryFormPanelProps) {
 
    const handleRemoveImage = () => {
       setValue("image", null, { shouldDirty: true });
-      setValue("image_path", null, { shouldDirty: true });
+      setValue("image_url", null, { shouldDirty: true });
       if (fileInputRef.current) {
          fileInputRef.current.value = "";
       }

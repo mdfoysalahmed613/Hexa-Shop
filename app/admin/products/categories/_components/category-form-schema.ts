@@ -13,7 +13,7 @@ export const categoryFormSchema = z.object({
   is_active: z.boolean(),
   parent_id: z.string().optional().nullable(),
   image: z.custom<File>().optional().nullable(),
-  image_path: z.string().optional().nullable(),
+  image_url: z.string().optional().nullable(),
 });
 
 export type CategoryFormData = z.infer<typeof categoryFormSchema>;
@@ -24,5 +24,5 @@ export const defaultCategoryFormValues: CategoryFormData = {
   is_active: true,
   parent_id: null,
   image: null,
-  image_path: null,
+  image_url: null,
 };

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getProducts,
   getProduct,
+  getProductBySlug,
   addProduct,
   updateProduct,
   deleteProduct,
@@ -36,6 +37,21 @@ export function useProduct(id: string | null) {
       return result.data as Product;
     },
     enabled: !!id,
+  });
+}
+
+export function useProductBySlug(slug: string | null) {
+  return useQuery({
+    queryKey: [...PRODUCTS_QUERY_KEY, "slug", slug],
+    queryFn: async () => {
+      if (!slug) return null;
+      const result = await getProductBySlug(slug);
+      if (!result.ok) {
+        throw new Error(result.error || "Failed to fetch product");
+      }
+      return result.data as Product;
+    },
+    enabled: !!slug,
   });
 }
 

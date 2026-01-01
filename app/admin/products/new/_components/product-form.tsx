@@ -91,7 +91,7 @@ export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
                existing_images:
                   product.images?.map((img) => ({
                      id: img.id,
-                     image_path: img.url,
+                     image_url: img.url,
                      is_primary: img.is_primary,
                   })) || [],
                deleted_image_ids: [],
@@ -505,7 +505,7 @@ export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
                                     className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
                                  >
                                     <Image
-                                       src={image.image_path || ""}
+                                       src={image.image_url || ""}
                                        alt={`Product image ${index + 1}`}
                                        fill
                                        className="object-cover"

@@ -6,9 +6,7 @@ import { z } from "zod";
 
 export const variantFormSchema = z.object({
   id: z.string().optional(), // For editing existing variants
-  price: z
-    .number("Price is required")
-    .min(0, "Price must be at least 0"),
+  price: z.number("Price is required").min(0, "Price must be at least 0"),
   compare_price: z
     .number()
     .min(0, "Compare price must be positive")
@@ -32,7 +30,7 @@ export type VariantFormData = z.infer<typeof variantFormSchema>;
 export const imageFormSchema = z.object({
   id: z.string().optional(), // For existing images
   file: z.custom<File>().optional(), // For new uploads
-  image_path: z.string().optional(), // URL for existing images
+  image_url: z.string().optional(), // URL for existing images
   is_primary: z.boolean(),
 });
 

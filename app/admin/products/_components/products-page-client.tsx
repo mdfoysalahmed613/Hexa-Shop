@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,10 @@ import {
    CheckCircle2,
    XCircle,
    X,
+   ChevronLeft,
+   ChevronRight,
+   ChevronsLeft,
+   ChevronsRight,
 } from "lucide-react";
 import {
    Select,
@@ -52,6 +56,9 @@ import type { Product } from "@/lib/services/products";
 type StatusFilter = "all" | "active" | "inactive";
 type StockFilter = "all" | "in-stock" | "low-stock" | "out-of-stock";
 
+const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100] as const;
+type ItemsPerPage = (typeof ITEMS_PER_PAGE_OPTIONS)[number];
+
 // Helper to get total stock from variants
 function getTotalStock(product: Product): number {
    if (!product.variants || product.variants.length === 0) return 0;
@@ -81,16 +88,41 @@ function getStockStatus(stock: number): {
 }
 
 export function ProductsPageClient() {
-   const [searchQuery, setSearchQuery] = useState("");
-   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
-   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+   const [searchQuery, setSearchQueryState] = useState("");
+   const [statusFilter, setStatusFilterState] = useState<StatusFilter>("all");
+   const [stockFilter, setStockFilterState] = useState<StockFilter>("all");
+   const [categoryFilter, setCategoryFilterState] = useState<string>("all");
    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+   // Pagination state
+   const [currentPage, setCurrentPage] = useState(1);
+   const [itemsPerPage, setItemsPerPage] = useState<ItemsPerPage>(10);
 
    const { data: products = [], isLoading } = useProducts();
    const { data: categories = [] } = useCategories();
    const deleteMutation = useDeleteProduct();
+
+   // Wrapper setters that also reset page
+   const setSearchQuery = useCallback((value: string) => {
+      setSearchQueryState(value);
+      setCurrentPage(1);
+   }, []);
+
+   const setStatusFilter = useCallback((value: StatusFilter) => {
+      setStatusFilterState(value);
+      setCurrentPage(1);
+   }, []);
+
+   const setStockFilter = useCallback((value: StockFilter) => {
+      setStockFilterState(value);
+      setCurrentPage(1);
+   }, []);
+
+   const setCategoryFilter = useCallback((value: string) => {
+      setCategoryFilterState(value);
+      setCurrentPage(1);
+   }, []);
 
    // Filter products
    const filteredProducts = useMemo(() => {
@@ -127,6 +159,14 @@ export function ProductsPageClient() {
       });
    }, [products, searchQuery, statusFilter, stockFilter, categoryFilter]);
 
+   // Pagination calculations
+   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+   const startIndex = (currentPage - 1) * itemsPerPage;
+   const endIndex = startIndex + itemsPerPage;
+   const paginatedProducts = useMemo(() => {
+      return filteredProducts.slice(startIndex, endIndex);
+   }, [filteredProducts, startIndex, endIndex]);
+
    // Stats - calculate from variants
    const stats = useMemo(() => {
       const lowStock = products.filter((p) => {
@@ -152,10 +192,16 @@ export function ProductsPageClient() {
    };
 
    const clearFilters = () => {
-      setSearchQuery("");
-      setStatusFilter("all");
-      setStockFilter("all");
-      setCategoryFilter("all");
+      setSearchQueryState("");
+      setStatusFilterState("all");
+      setStockFilterState("all");
+      setCategoryFilterState("all");
+      setCurrentPage(1);
+   };
+
+   const handleItemsPerPageChange = (value: string) => {
+      setItemsPerPage(parseInt(value) as ItemsPerPage);
+      setCurrentPage(1);
    };
 
    const hasActiveFilters =
@@ -300,19 +346,45 @@ export function ProductsPageClient() {
             </CardHeader>
 
             <CardContent className="p-0">
-               {/* Results Count */}
-               <div className="border-b px-6 py-3">
+               {/* Results Count & Items Per Page */}
+               <div className="flex items-center justify-between border-b px-6 py-3">
                   {isLoading ? (
                      <Skeleton className="h-4 w-40" />
                   ) : (
                      <p className="text-sm text-muted-foreground">
                         Showing{" "}
                         <span className="font-medium text-foreground">
+                           {filteredProducts.length > 0 ? startIndex + 1 : 0}
+                        </span>{" "}
+                        -{" "}
+                        <span className="font-medium text-foreground">
+                           {Math.min(endIndex, filteredProducts.length)}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-medium text-foreground">
                            {filteredProducts.length}
                         </span>{" "}
-                        of {products.length} products
+                        products
                      </p>
                   )}
+                  <div className="flex items-center gap-2">
+                     <span className="text-sm text-muted-foreground">Per page:</span>
+                     <Select
+                        value={itemsPerPage.toString()}
+                        onValueChange={handleItemsPerPageChange}
+                     >
+                        <SelectTrigger className="h-8 w-20">
+                           <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                           {ITEMS_PER_PAGE_OPTIONS.map((option) => (
+                              <SelectItem key={option} value={option.toString()}>
+                                 {option}
+                              </SelectItem>
+                           ))}
+                        </SelectContent>
+                     </Select>
+                  </div>
                </div>
 
                {/* Products List */}
@@ -370,7 +442,7 @@ export function ProductsPageClient() {
                      </div>
                   ) : (
                      <div className="space-y-3">
-                        {filteredProducts.map((product) => {
+                        {paginatedProducts.map((product) => {
                            const totalStock = getTotalStock(product);
                            const stockStatus = getStockStatus(totalStock);
                            const priceDisplay = getPriceDisplay(product);
@@ -477,6 +549,101 @@ export function ProductsPageClient() {
                      </div>
                   )}
                </div>
+
+               {/* Pagination Controls */}
+               {filteredProducts.length > 0 && totalPages > 1 && (
+                  <div className="flex items-center justify-between border-t px-6 py-4">
+                     <p className="text-sm text-muted-foreground">
+                        Page {currentPage} of {totalPages}
+                     </p>
+                     <div className="flex items-center gap-1">
+                        <Button
+                           variant="outline"
+                           size="icon"
+                           className="h-8 w-8"
+                           disabled={currentPage === 1}
+                           onClick={() => setCurrentPage(1)}
+                        >
+                           <ChevronsLeft className="h-4 w-4" />
+                           <span className="sr-only">First page</span>
+                        </Button>
+                        <Button
+                           variant="outline"
+                           size="icon"
+                           className="h-8 w-8"
+                           disabled={currentPage === 1}
+                           onClick={() => setCurrentPage((p) => p - 1)}
+                        >
+                           <ChevronLeft className="h-4 w-4" />
+                           <span className="sr-only">Previous page</span>
+                        </Button>
+
+                        {/* Page Number Buttons */}
+                        <div className="flex items-center gap-1">
+                           {Array.from({ length: totalPages }, (_, i) => i + 1)
+                              .filter((page) => {
+                                 // Show first, last, current, and adjacent pages
+                                 return (
+                                    page === 1 ||
+                                    page === totalPages ||
+                                    Math.abs(page - currentPage) <= 1
+                                 );
+                              })
+                              .reduce<(number | "ellipsis")[]>((acc, page, idx, arr) => {
+                                 if (idx > 0) {
+                                    const prevPage = arr[idx - 1];
+                                    if (page - prevPage > 1) {
+                                       acc.push("ellipsis");
+                                    }
+                                 }
+                                 acc.push(page);
+                                 return acc;
+                              }, [])
+                              .map((item, idx) =>
+                                 item === "ellipsis" ? (
+                                    <span
+                                       key={`ellipsis-${idx}`}
+                                       className="px-2 text-muted-foreground"
+                                    >
+                                       …
+                                    </span>
+                                 ) : (
+                                    <Button
+                                       key={item}
+                                       variant={currentPage === item ? "default" : "outline"}
+                                       size="icon"
+                                       className="h-8 w-8"
+                                       onClick={() => setCurrentPage(item)}
+                                    >
+                                       {item}
+                                    </Button>
+                                 )
+                              )}
+                        </div>
+
+                        <Button
+                           variant="outline"
+                           size="icon"
+                           className="h-8 w-8"
+                           disabled={currentPage === totalPages}
+                           onClick={() => setCurrentPage((p) => p + 1)}
+                        >
+                           <ChevronRight className="h-4 w-4" />
+                           <span className="sr-only">Next page</span>
+                        </Button>
+                        <Button
+                           variant="outline"
+                           size="icon"
+                           className="h-8 w-8"
+                           disabled={currentPage === totalPages}
+                           onClick={() => setCurrentPage(totalPages)}
+                        >
+                           <ChevronsRight className="h-4 w-4" />
+                           <span className="sr-only">Last page</span>
+                        </Button>
+                     </div>
+                  </div>
+               )}
             </CardContent>
          </Card>
 

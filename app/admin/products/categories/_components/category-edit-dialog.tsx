@@ -38,7 +38,6 @@ import {
 } from "./category-form-schema";
 import { type Category } from "@/lib/services/categories";
 import { useUpdateCategory, useCategories } from "@/hooks/use-categories";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 interface CategoryEditDialogProps {
@@ -69,21 +68,16 @@ export function CategoryEditDialog({
    });
 
    const imageFile = useWatch({ control, name: "image" });
-   const currentImagePath = useWatch({ control, name: "image_path" });
+   const currentImageUrl = useWatch({ control, name: "image_url" });
 
-   // Compute image preview from form state
+   // Compute image preview from form state - now image_url is the full public URL
    const imagePreview = useMemo(() => {
       if (imageFile && imageFile instanceof File && imageFile.size > 0) {
          return URL.createObjectURL(imageFile);
       }
-      if (currentImagePath) {
-         const supabase = createClient();
-         return supabase.storage
-            .from("category-images")
-            .getPublicUrl(currentImagePath).data.publicUrl;
-      }
-      return null;
-   }, [imageFile, currentImagePath]);
+      // image_url is now the full public URL, no need to generate it
+      return currentImageUrl || null;
+   }, [imageFile, currentImageUrl]);
 
    // Reset form when category changes
    useEffect(() => {
@@ -94,7 +88,7 @@ export function CategoryEditDialog({
             is_active: category.is_active,
             parent_id: category.parent_id,
             image: null,
-            image_path: category.image_path,
+            image_url: category.image_url,
          });
       }
    }, [category, open, reset]);
@@ -112,9 +106,9 @@ export function CategoryEditDialog({
          formData.append("image", data.image);
       }
 
-      // Always send the original image path so server can delete it when uploading new image
-      if (category.image_path) {
-         formData.append("image_path", category.image_path);
+      // Always send the original image URL so server can delete it when uploading new image
+      if (category.image_url) {
+         formData.append("image_url", category.image_url);
       }
 
       try {
@@ -138,7 +132,7 @@ export function CategoryEditDialog({
 
    const handleRemoveImage = () => {
       setValue("image", null, { shouldDirty: true });
-      setValue("image_path", null, { shouldDirty: true });
+      setValue("image_url", null, { shouldDirty: true });
       if (fileInputRef.current) {
          fileInputRef.current.value = "";
       }

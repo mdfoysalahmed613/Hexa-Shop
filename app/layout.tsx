@@ -4,6 +4,8 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { UserProvider } from "@/providers/user-provider";
 import { QueryProvider } from "@/providers/query-provider";
+import { CartProvider } from "@/providers/cart-provider";
+import { CartSheet } from "@/components/shared/cart-sheet";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -37,8 +39,12 @@ export default function RootLayout({
           <QueryProvider>
             {/* UserProvider subscribes to Supabase auth state on the client */}
             <UserProvider>
-              {children}
-              <Toaster position="top-center" richColors />
+              {/* CartProvider manages shopping cart state */}
+              <CartProvider>
+                {children}
+                <CartSheet />
+                <Toaster position="top-center" richColors />
+              </CartProvider>
             </UserProvider>
           </QueryProvider>
         </ThemeProvider>

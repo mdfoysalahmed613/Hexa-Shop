@@ -267,5 +267,5 @@ const { control, handleSubmit, setValue } = useForm<FormData>({
 
 // Use useWatch for reactive values
 const imageFile = useWatch({ control, name: "image" });
-const currentImageUrl = useWatch({ control, name: "image_path" });
+const currentImageUrl = useWatch({ control, name: "image_url" });
 ```

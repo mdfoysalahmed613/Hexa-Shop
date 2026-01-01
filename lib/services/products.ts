@@ -34,7 +34,7 @@ export interface ProductImage {
   id: string;
   product_id: string;
   url: string;
-  image_path?: string;
+  image_url?: string;
   is_primary: boolean;
   display_order: number;
 }
@@ -88,17 +88,41 @@ interface GetProductResult extends ActionResult {
 // ============================================================================
 
 /**
- * Delete images from storage
+ * Extract storage path from Supabase public URL
+ * URL format: https://xxx.supabase.co/storage/v1/object/public/bucket-name/path/to/file.ext
+ */
+function extractStoragePath(publicUrl: string): string | null {
+  try {
+    const url = new URL(publicUrl);
+    const pathParts = url.pathname.split("/storage/v1/object/public/");
+    if (pathParts.length === 2) {
+      // Remove bucket name from path
+      const fullPath = pathParts[1];
+      const bucketAndPath = fullPath.split("/");
+      // Remove the first element (bucket name) and join the rest
+      return bucketAndPath.slice(1).join("/");
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Delete images from storage by extracting paths from public URLs
  */
 async function deleteImagesFromStorage(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  imagePaths: string[]
+  imageUrls: string[]
 ): Promise<void> {
+  const storagePaths = imageUrls
+    .map(extractStoragePath)
+    .filter((path): path is string => path !== null);
 
-  if (imagePaths.length > 0) {
+  if (storagePaths.length > 0) {
     const { error } = await supabase.storage
       .from("product-images")
-      .remove(imagePaths);
+      .remove(storagePaths);
     if (error) {
       console.error("Failed to delete images from storage:", error);
     }
@@ -224,11 +248,11 @@ export async function addProduct(
 
       imageUrls.push(urlData.publicUrl);
 
-      // Insert into product_images table
+      // Insert into product_images table with public URL
       await supabase.from("product_images").insert([
         {
           product_id: product.id,
-          image_path: urlData.publicUrl,
+          image_url: urlData.publicUrl,
           is_primary: i === 0, // First image is primary
         },
       ]);
@@ -305,13 +329,13 @@ export async function updateProduct(
     if (deletedImageIds.length > 0) {
       const { data: imagesToDelete } = await supabase
         .from("product_images")
-        .select("image_path")
+        .select("image_url")
         .in("id", deletedImageIds);
 
       if (imagesToDelete) {
         await deleteImagesFromStorage(
           supabase,
-          imagesToDelete.map((img) => img.image_path)
+          imagesToDelete.map((img) => img.image_url)
         );
         await supabase
           .from("product_images")
@@ -347,11 +371,11 @@ export async function updateProduct(
         .from("product-images")
         .getPublicUrl(filePath);
 
-      // Insert new image
+      // Insert new image with public URL
       await supabase.from("product_images").insert([
         {
           product_id: id,
-          image_path: urlData.publicUrl,
+          image_url: urlData.publicUrl,
           is_primary: false, // Existing images keep primary status
         },
       ]);
@@ -440,14 +464,14 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
     // Get all product images to delete from storage
     const { data: images } = await supabase
       .from("product_images")
-      .select("image_path")
+      .select("image_url")
       .eq("product_id", id);
 
     // Delete images from storage
     if (images && images.length > 0) {
       await deleteImagesFromStorage(
         supabase,
-        images.map((img) => img.image_path)
+        images.map((img) => img.image_url)
       );
     }
 
@@ -488,7 +512,7 @@ export async function getProducts(): Promise<GetProductsResult> {
         `
         *,
         category_data:categories!category_id(id, name, slug),
-        images:product_images(id, image_path, is_primary),
+        images:product_images(id, image_url, is_primary),
         variants:products_variants(id, price, compare_price, stock, is_active, attributes)
       `
       )
@@ -502,9 +526,9 @@ export async function getProducts(): Promise<GetProductsResult> {
     // Transform data
     const products = (data || []).map((product) => {
       const images = (product.images || []).map(
-        (img: { id: string; image_path: string; is_primary: boolean }) => ({
+        (img: { id: string; image_url: string; is_primary: boolean }) => ({
           ...img,
-          url: img.image_path, // Map image_path to url for backwards compatibility
+          url: img.image_url, // Map image_url to url for backwards compatibility
         })
       );
       const primaryImage =
@@ -540,7 +564,7 @@ export async function getProduct(id: string): Promise<GetProductResult> {
         `
         *,
         category_data:categories!category_id(id, name, slug),
-        images:product_images(id, image_path, is_primary),
+        images:product_images(id, image_url, is_primary),
         variants:products_variants(id, price, compare_price, stock, is_active, attributes)
       `
       )
@@ -554,9 +578,9 @@ export async function getProduct(id: string): Promise<GetProductResult> {
 
     // Transform data
     const images = (data.images || []).map(
-      (img: { id: string; image_path: string; is_primary: boolean }) => ({
+      (img: { id: string; image_url: string; is_primary: boolean }) => ({
         ...img,
-        url: img.image_path, // Map image_path to url for backwards compatibility
+        url: img.image_url, // Map image_url to url for backwards compatibility
       })
     );
     const primaryImage =
@@ -593,7 +617,7 @@ export async function getProductsByCategory(
         `
         *,
         category_data:categories!category_id(id, name, slug),
-        images:product_images(id, image_path, is_primary),
+        images:product_images(id, image_url, is_primary),
         variants:products_variants(id, price, compare_price, stock, is_active, attributes)
       `
       )
@@ -608,9 +632,9 @@ export async function getProductsByCategory(
 
     const products = (data || []).map((product) => {
       const images = (product.images || []).map(
-        (img: { id: string; image_path: string; is_primary: boolean }) => ({
+        (img: { id: string; image_url: string; is_primary: boolean }) => ({
           ...img,
-          url: img.image_path, // Map image_path to url for backwards compatibility
+          url: img.image_url, // Map image_url to url for backwards compatibility
         })
       );
       const primaryImage =
@@ -651,5 +675,58 @@ export async function categoryRequiresVariants(
   } catch (e) {
     console.error("Check category variants error:", e);
     return false;
+  }
+}
+
+/**
+ * Get a single product by slug with full details
+ */
+export async function getProductBySlug(
+  slug: string
+): Promise<GetProductResult> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("products")
+      .select(
+        `
+        *,
+        category_data:categories!category_id(id, name, slug),
+        images:product_images(id, image_url, is_primary),
+        variants:products_variants(id, price, compare_price, stock, is_active, attributes)
+      `
+      )
+      .eq("slug", slug)
+      .single();
+
+    if (error) {
+      console.error("Fetch error:", error);
+      return { ok: false, error: "Product not found" };
+    }
+
+    // Transform data
+    const images = (data.images || []).map(
+      (img: { id: string; image_url: string; is_primary: boolean }) => ({
+        ...img,
+        url: img.image_url,
+      })
+    );
+    const primaryImage =
+      images.find((img: ProductImage) => img.is_primary) || images[0];
+
+    const product = {
+      ...data,
+      category: data.category_id,
+      category_name: data.category_data?.name || data.category_id,
+      primary_image: primaryImage,
+      images,
+    };
+
+    return { ok: true, data: product };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    console.error("Get product by slug error:", e);
+    return { ok: false, error: message };
   }
 }

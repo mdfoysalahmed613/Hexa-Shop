@@ -8,11 +8,13 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import AuthButton from "./auth-button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { useCart } from "@/providers/cart-provider";
+import { Badge } from "@/components/ui/badge";
 
 export function Navbar() {
-
    const [searchOpen, setSearchOpen] = useState(false);
    const [searchQuery, setSearchQuery] = useState("");
+   const { openCart, itemCount } = useCart();
 
    return (
       <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
@@ -73,11 +75,17 @@ export function Navbar() {
                      <span className="sr-only">Search</span>
                   </Button>
 
-                  <Button variant="ghost" size="icon" asChild>
-                     <Link href="/cart">
-                        <ShoppingCart className="h-5 w-5" />
-                        <span className="sr-only">Shopping Cart</span>
-                     </Link>
+                  <Button variant="ghost" size="icon" className="relative" onClick={openCart}>
+                     <ShoppingCart className="h-5 w-5" />
+                     {itemCount > 0 && (
+                        <Badge
+                           variant="destructive"
+                           className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                        >
+                           {itemCount > 99 ? "99+" : itemCount}
+                        </Badge>
+                     )}
+                     <span className="sr-only">Shopping Cart</span>
                   </Button>
                   <AuthButton />
 

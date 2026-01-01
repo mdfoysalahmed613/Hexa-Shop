@@ -2,42 +2,46 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { PantImage, ShirtImage, ShoeImage, TShirtsImage, WatchImage } from "@/assets/category";
-
-const categories = [
-   {
-      name: "Shirts",
-      image: ShirtImage,
-      count: "120+ Styles",
-      href: "/products?category=shirts",
-   },
-   {
-      name: "T-Shirts",
-      image: TShirtsImage,
-      count: "150+ Designs",
-      href: "/products?category=t-shirts",
-   },
-   {
-      name: "Pants",
-      image: PantImage,
-      count: "80+ Fits",
-      href: "/products?category=pants",
-   },
-   {
-      name: "Shoes",
-      image: ShoeImage,
-      count: "90+ Pairs",
-      href: "/products?category=shoes",
-   },
-   {
-      name: "Watches",
-      image: WatchImage,
-      count: "60+ Timepieces",
-      href: "/products?category=watches",
-   },
-];
+import { useCategories } from "@/hooks/use-categories";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Package } from "lucide-react";
 
 export function CategorySection() {
+   const { data: categories = [], isLoading } = useCategories();
+
+   // Filter only active categories with images for display
+   const displayCategories = categories.filter(
+      (cat) => cat.is_active
+   ).slice(0, 6);
+
+   if (isLoading) {
+      return (
+         <div className="py-12 md:py-16">
+            <div className="container mx-auto px-4">
+               <div className="text-center mb-10">
+                  <Skeleton className="h-8 w-48 mx-auto mb-2" />
+                  <Skeleton className="h-5 w-64 mx-auto" />
+               </div>
+               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {[...Array(6)].map((_, i) => (
+                     <div key={i} className="rounded-lg overflow-hidden border border-border">
+                        <Skeleton className="aspect-square w-full" />
+                        <div className="p-4 space-y-2">
+                           <Skeleton className="h-5 w-20 mx-auto" />
+                           <Skeleton className="h-4 w-16 mx-auto" />
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+         </div>
+      );
+   }
+
+   if (displayCategories.length === 0) {
+      return null;
+   }
+
    return (
       <div className="py-12 md:py-16">
          <div className="container mx-auto px-4">
@@ -49,28 +53,36 @@ export function CategorySection() {
                   Discover our premium collection for modern men
                </p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-               {categories.map((category) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+               {displayCategories.map((category) => (
                   <Link
-                     key={category.name}
-                     href={category.href}
+                     key={category.id}
+                     href={`/products?category=${category.slug}`}
                      className="group"
                   >
                      <div className="bg-background rounded-lg overflow-hidden border border-border hover:border-primary hover:shadow-lg transition-all duration-300">
                         <div className="relative aspect-square w-full bg-secondary/30">
-                           <Image
-                              src={category.image}
-                              alt={category.name}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
-                              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                           />
+                           {category.image_url ? (
+                              <Image
+                                 src={category.image_url}
+                                 alt={category.name}
+                                 fill
+                                 className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                              />
+                           ) : (
+                              <div className="flex h-full w-full items-center justify-center">
+                                 <Package className="h-12 w-12 text-muted-foreground" />
+                              </div>
+                           )}
                         </div>
                         <div className="p-4 text-center">
                            <h3 className="font-semibold">{category.name}</h3>
-                           <p className="text-sm text-muted-foreground">
-                              {category.count}
-                           </p>
+                           {category.product_count !== undefined && (
+                              <p className="text-sm text-muted-foreground">
+                                 {category.product_count} Products
+                              </p>
+                           )}
                         </div>
                      </div>
                   </Link>
