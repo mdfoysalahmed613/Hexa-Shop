@@ -17,8 +17,12 @@ export const variantFormSchema = z.object({
     .int("Stock must be a whole number")
     .min(0, "Stock cannot be negative"),
   is_active: z.boolean(),
-  // Attributes as key-value pairs (e.g., { "Color": "Red", "Size": "M" })
-  attributes: z.record(z.string(), z.string()).optional().nullable(),
+  // Variant name (e.g., "Red / Large", "Blue / Small")
+  variant_name: z
+    .string()
+    .max(200, "Variant name too long")
+    .optional()
+    .nullable(),
 });
 
 export type VariantFormData = z.infer<typeof variantFormSchema>;
@@ -95,7 +99,7 @@ export const defaultVariant: VariantFormData = {
   compare_price: null,
   stock: 0,
   is_active: true,
-  attributes: null,
+  variant_name: null,
 };
 
 export const defaultProductFormValues: ProductFormData = {

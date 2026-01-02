@@ -84,7 +84,7 @@ export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
                         compare_price: v.compare_price || null,
                         stock: v.stock,
                         is_active: v.is_active,
-                        attributes: v.attributes || null,
+                        variant_name: v.variant_name || null,
                      }))
                      : [defaultVariant],
                images: [],
@@ -304,7 +304,7 @@ export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
                            <div>
                               <CardTitle>Product Variants</CardTitle>
                               <CardDescription>
-                                 Add pricing, stock, and optional attributes for each variant
+                                 Add pricing, stock, and variant names for each option
                               </CardDescription>
                            </div>
                            <Button
@@ -475,11 +475,32 @@ export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
                                  />
                               </div>
 
-                              {/* Attributes (optional key-value pairs) */}
-                              <FieldDescription className="text-xs">
-                                 Attributes like Color, Size can be added as key-value
-                                 pairs in the database.
-                              </FieldDescription>
+                              {/* Variant Name */}
+                              <Controller
+                                 control={control}
+                                 name={`variants.${index}.variant_name`}
+                                 render={({ field, fieldState }) => (
+                                    <Field data-invalid={fieldState.invalid}>
+                                       <FieldLabel htmlFor={`variant_name-${index}`}>
+                                          Variant Name
+                                       </FieldLabel>
+                                       <Input
+                                          id={`variant_name-${index}`}
+                                          placeholder="e.g. Red / Large, Blue / Small"
+                                          {...field}
+                                          value={field.value ?? ""}
+                                          onChange={(e) => field.onChange(e.target.value || null)}
+                                          aria-invalid={fieldState.invalid}
+                                       />
+                                       <FieldDescription className="text-xs">
+                                          A descriptive name for this variant (optional)
+                                       </FieldDescription>
+                                       {fieldState.invalid && (
+                                          <FieldError errors={[fieldState.error]} />
+                                       )}
+                                    </Field>
+                                 )}
+                              />
                            </div>
                         ))}
                      </CardContent>

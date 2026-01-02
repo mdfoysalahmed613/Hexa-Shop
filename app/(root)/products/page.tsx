@@ -223,14 +223,13 @@ export default function ProductsPage() {
                   </div>
 
                   {/* Results Count */}
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <div className="text-sm text-muted-foreground mb-4">
                      {isLoading ? (
                         <Skeleton className="h-4 w-32" />
                      ) : (
                         `Showing ${filteredProducts.length} product${filteredProducts.length !== 1 ? "s" : ""}`
                      )}
-                  </p>
-
+                  </div>
                   {/* Products Grid/List */}
                   {isLoading ? (
                      <div

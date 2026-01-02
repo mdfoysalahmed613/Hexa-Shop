@@ -82,11 +82,9 @@ export function CartSheet() {
                                        <h4 className="font-medium leading-tight line-clamp-1">
                                           {item.name}
                                        </h4>
-                                       {item.attributes && (
+                                       {item.variantName && (
                                           <p className="text-xs text-muted-foreground">
-                                             {Object.entries(item.attributes)
-                                                .map(([key, value]) => `${key}: ${value}`)
-                                                .join(", ")}
+                                             {item.variantName}
                                           </p>
                                        )}
                                     </div>

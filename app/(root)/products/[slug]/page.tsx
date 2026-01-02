@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, use, useCallback } from "react";
+import { useState, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
    ChevronLeft,
-   ChevronRight,
    Minus,
    Package,
    Plus,
@@ -18,7 +17,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { useProductBySlug } from "@/hooks/use-products";
-import { useSwipe } from "@/hooks/use-swipe";
 import { useCart } from "@/providers/cart-provider";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -49,24 +47,6 @@ export default function ProductPage({ params }: ProductPageProps) {
    const selectedVariant = variants[selectedVariantIndex];
    const images = product.images || [];
    const selectedImage = images[selectedImageIndex];
-
-   const goToNextImage = useCallback(() => {
-      if (images.length > 1) {
-         setSelectedImageIndex((prev) => (prev + 1) % images.length);
-      }
-   }, [images.length]);
-
-   const goToPrevImage = useCallback(() => {
-      if (images.length > 1) {
-         setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length);
-      }
-   }, [images.length]);
-
-   const { swipeOffset, isSwiping, handlers } = useSwipe({
-      onSwipeLeft: goToNextImage,
-      onSwipeRight: goToPrevImage,
-      threshold: 50,
-   });
 
    const isOutOfStock = !selectedVariant || selectedVariant.stock === 0;
    const cartQuantity = selectedVariant
@@ -112,78 +92,20 @@ export default function ProductPage({ params }: ProductPageProps) {
             <div className="grid gap-8 lg:grid-cols-2">
                {/* Images Section */}
                <div className="space-y-4">
-                  {/* Main Image with Swipe Support */}
-                  <div
-                     className="relative aspect-square overflow-hidden rounded-lg bg-muted select-none touch-pan-y"
-                     {...handlers}
-                  >
-                     <div
-                        className={cn(
-                           "absolute inset-0 transition-transform",
-                           !isSwiping && "duration-300 ease-out"
-                        )}
-                        style={{
-                           transform: isSwiping ? `translateX(${swipeOffset}px)` : "translateX(0)",
-                        }}
-                     >
-                        {selectedImage?.url ? (
-                           <Image
-                              src={selectedImage.url}
-                              alt={product.name}
-                              fill
-                              className="object-cover pointer-events-none"
-                              priority
-                              sizes="(max-width: 1024px) 100vw, 50vw"
-                              draggable={false}
-                           />
-                        ) : (
-                           <div className="flex h-full w-full items-center justify-center">
-                              <Package className="h-24 w-24 text-muted-foreground" />
-                           </div>
-                        )}
-                     </div>
-
-                     {/* Navigation Arrows */}
-                     {images.length > 1 && (
-                        <>
-                           <Button
-                              variant="ghost"
-                              size="icon"
-                              className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 backdrop-blur-sm shadow-sm"
-                              onClick={goToPrevImage}
-                           >
-                              <ChevronLeft className="h-5 w-5" />
-                              <span className="sr-only">Previous image</span>
-                           </Button>
-                           <Button
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90 backdrop-blur-sm shadow-sm"
-                              onClick={goToNextImage}
-                           >
-                              <ChevronRight className="h-5 w-5" />
-                              <span className="sr-only">Next image</span>
-                           </Button>
-                        </>
-                     )}
-
-                     {/* Image Counter */}
-                     {images.length > 1 && (
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                           {images.map((_, index) => (
-                              <button
-                                 key={index}
-                                 onClick={() => setSelectedImageIndex(index)}
-                                 className={cn(
-                                    "h-2 w-2 rounded-full transition-all",
-                                    selectedImageIndex === index
-                                       ? "bg-primary w-4"
-                                       : "bg-background/60 hover:bg-background/80"
-                                 )}
-                              >
-                                 <span className="sr-only">Image {index + 1}</span>
-                              </button>
-                           ))}
+                  {/* Main Image */}
+                  <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
+                     {selectedImage?.url ? (
+                        <Image
+                           src={selectedImage.url}
+                           alt={product.name}
+                           fill
+                           className="object-cover"
+                           priority
+                           sizes="(max-width: 1024px) 100vw, 50vw"
+                        />
+                     ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                           <Package className="h-24 w-24 text-muted-foreground" />
                         </div>
                      )}
 
@@ -371,9 +293,7 @@ function VariantButton({
    onClick: () => void;
 }) {
    const isOutOfStock = variant.stock === 0;
-   const label = variant.attributes
-      ? Object.values(variant.attributes).join(" / ")
-      : `$${variant.price.toFixed(2)}`;
+   const label = variant.variant_name || `$${variant.price.toFixed(2)}`;
 
    return (
       <button

@@ -46,15 +46,11 @@ export interface ProductVariant {
   compare_price: number | null;
   stock: number;
   is_active: boolean;
-  attributes?: Record<string, string> | null;
+  variant_name?: string | null;
   price_adjustment?: number; // Legacy field
 }
 
-export interface VariantAttribute {
-  attribute_type: string;
-  attribute_value: string;
-  hex_code?: string | null;
-}
+// Note: VariantAttribute interface removed - now using simple variant_name string
 
 // Form data types for variants
 interface VariantFormInput {
@@ -63,7 +59,7 @@ interface VariantFormInput {
   compare_price?: number | null;
   stock: number;
   is_active: boolean;
-  attributes?: Record<string, string> | null;
+  variant_name?: string | null;
 }
 
 interface ActionResult {
@@ -200,7 +196,7 @@ export async function addProduct(
       compare_price: v.compare_price || null,
       stock: v.stock,
       is_active: v.is_active,
-      attributes: v.attributes || null,
+      variant_name: v.variant_name || null,
     }));
 
     const { error: variantError } = await supabase
@@ -402,7 +398,7 @@ export async function updateProduct(
       compare_price: v.compare_price || null,
       stock: v.stock,
       is_active: v.is_active,
-      attributes: v.attributes || null,
+      variant_name: v.variant_name || null,
     }));
 
     const { error: variantError } = await supabase
@@ -513,7 +509,7 @@ export async function getProducts(): Promise<GetProductsResult> {
         *,
         category_data:categories!category_id(id, name, slug),
         images:product_images(id, image_url, is_primary),
-        variants:products_variants(id, price, compare_price, stock, is_active, attributes)
+        variants:products_variants(id, price, compare_price, stock, is_active, variant_name)
       `
       )
       .order("created_at", { ascending: false });
@@ -565,7 +561,7 @@ export async function getProduct(id: string): Promise<GetProductResult> {
         *,
         category_data:categories!category_id(id, name, slug),
         images:product_images(id, image_url, is_primary),
-        variants:products_variants(id, price, compare_price, stock, is_active, attributes)
+        variants:products_variants(id, price, compare_price, stock, is_active, variant_name)
       `
       )
       .eq("id", id)
@@ -618,7 +614,7 @@ export async function getProductsByCategory(
         *,
         category_data:categories!category_id(id, name, slug),
         images:product_images(id, image_url, is_primary),
-        variants:products_variants(id, price, compare_price, stock, is_active, attributes)
+        variants:products_variants(id, price, compare_price, stock, is_active, variant_name)
       `
       )
       .eq("category_id", categoryId)
@@ -694,7 +690,7 @@ export async function getProductBySlug(
         *,
         category_data:categories!category_id(id, name, slug),
         images:product_images(id, image_url, is_primary),
-        variants:products_variants(id, price, compare_price, stock, is_active, attributes)
+        variants:products_variants(id, price, compare_price, stock, is_active, variant_name)
       `
       )
       .eq("slug", slug)
@@ -753,7 +749,7 @@ export async function searchProducts(
         *,
         category_data:categories!category_id(id, name, slug),
         images:product_images(id, image_url, is_primary),
-        variants:products_variants(id, price, compare_price, stock, is_active, attributes)
+        variants:products_variants(id, price, compare_price, stock, is_active, variant_name)
       `
       )
       .eq("is_active", true)

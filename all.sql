@@ -16,7 +16,6 @@ CREATE TABLE products (
    NAME text NOT NULL,
    slug text UNIQUE NOT NULL,
    description text,
-   is_active BOOLEAN NOT NULL DEFAULT TRUE,
    category_id uuid NOT NULL REFERENCES categories(id) ON
    DELETE
       CASCADE,
@@ -32,7 +31,7 @@ CREATE TABLE products_variants (
       compare_price numeric(10, 2) CHECK (compare_price >= price),
       stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
       is_active BOOLEAN NOT NULL DEFAULT TRUE,
-      attributes jsonb,
+      variant_name text,
       created_at timestamptz NOT NULL DEFAULT now(),
 );
 
