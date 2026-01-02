@@ -730,3 +730,66 @@ export async function getProductBySlug(
     return { ok: false, error: message };
   }
 }
+
+/**
+ * Search products by name (for autocomplete/search functionality)
+ * Returns active products matching the search query
+ */
+export async function searchProducts(
+  query: string,
+  limit: number = 10
+): Promise<GetProductsResult> {
+  try {
+    if (!query || query.trim().length < 2) {
+      return { ok: true, data: [] };
+    }
+
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("products")
+      .select(
+        `
+        *,
+        category_data:categories!category_id(id, name, slug),
+        images:product_images(id, image_url, is_primary),
+        variants:products_variants(id, price, compare_price, stock, is_active, attributes)
+      `
+      )
+      .eq("is_active", true)
+      .ilike("name", `%${query}%`)
+      .order("name", { ascending: true })
+      .limit(limit);
+
+    if (error) {
+      console.error("Search error:", error);
+      return { ok: false, error: "Failed to search products", data: [] };
+    }
+
+    // Transform data
+    const products = (data || []).map((product) => {
+      const images = (product.images || []).map(
+        (img: { id: string; image_url: string; is_primary: boolean }) => ({
+          ...img,
+          url: img.image_url,
+        })
+      );
+      const primaryImage =
+        images.find((img: ProductImage) => img.is_primary) || images[0];
+
+      return {
+        ...product,
+        category: product.category_id,
+        category_name: product.category_data?.name || product.category_id,
+        primary_image: primaryImage,
+        images,
+      };
+    });
+
+    return { ok: true, data: products };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    console.error("Search products error:", e);
+    return { ok: false, error: message, data: [] };
+  }
+}

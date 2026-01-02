@@ -3,6 +3,7 @@ import {
   getProducts,
   getProduct,
   getProductBySlug,
+  searchProducts,
   addProduct,
   updateProduct,
   deleteProduct,
@@ -121,5 +122,20 @@ export function useDeleteProduct() {
     onError: (error: Error) => {
       toast.error(error.message);
     },
+  });
+}
+
+export function useSearchProducts(query: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: [...PRODUCTS_QUERY_KEY, "search", query],
+    queryFn: async () => {
+      const result = await searchProducts(query);
+      if (!result.ok) {
+        throw new Error(result.error || "Failed to search products");
+      }
+      return result.data as Product[];
+    },
+    enabled: enabled && query.trim().length >= 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }

@@ -120,28 +120,6 @@ export async function getCategory(id: string): Promise<GetCategoryResult> {
   }
 }
 
-export async function getActiveCategories(): Promise<GetCategoriesResult> {
-  try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("categories")
-      .select("id, name, slug")
-      .eq("is_active", true)
-      .order("name", { ascending: true });
-
-    if (error) {
-      console.error("Error fetching active categories:", error);
-      return { ok: false, error: error.message };
-    }
-
-    return { ok: true, data: data as Category[] };
-  } catch (error) {
-    console.error("Unexpected error fetching active categories:", error);
-    return { ok: false, error: "Failed to fetch active categories" };
-  }
-}
-
 // ============================================================================
 // Write Operations
 // ============================================================================

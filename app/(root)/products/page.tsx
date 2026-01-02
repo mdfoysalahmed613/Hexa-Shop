@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -44,10 +44,16 @@ function getTotalStock(product: Product): number {
 export default function ProductsPage() {
    const searchParams = useSearchParams();
    const categorySlug = searchParams.get("category");
+   const urlSearchQuery = searchParams.get("search") || "";
 
-   const [searchQuery, setSearchQuery] = useState("");
+   const [searchQuery, setSearchQuery] = useState(urlSearchQuery);
    const [sortBy, setSortBy] = useState<SortOption>("newest");
    const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+   // Sync search query with URL params
+   useEffect(() => {
+      setSearchQuery(urlSearchQuery);
+   }, [urlSearchQuery]);
 
    const { data: products = [], isLoading: productsLoading } = useProducts();
    const { data: categories = [], isLoading: categoriesLoading } = useCategories();
@@ -152,8 +158,8 @@ export default function ProductsPage() {
                         <Link
                            href="/products"
                            className={`block px-3 py-2 rounded-md text-sm transition-colors ${!categorySlug
-                                 ? "bg-primary text-primary-foreground"
-                                 : "hover:bg-muted"
+                              ? "bg-primary text-primary-foreground"
+                              : "hover:bg-muted"
                               }`}
                         >
                            All Products
@@ -163,8 +169,8 @@ export default function ProductsPage() {
                               key={category.id}
                               href={`/products?category=${category.slug}`}
                               className={`block px-3 py-2 rounded-md text-sm transition-colors ${categorySlug === category.slug
-                                    ? "bg-primary text-primary-foreground"
-                                    : "hover:bg-muted"
+                                 ? "bg-primary text-primary-foreground"
+                                 : "hover:bg-muted"
                                  }`}
                            >
                               {category.name}
