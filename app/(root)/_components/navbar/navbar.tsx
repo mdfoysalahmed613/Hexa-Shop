@@ -13,6 +13,88 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { useCart } from "@/providers/cart-provider";
 import { Badge } from "@/components/ui/badge";
 import { useSearchProducts } from "@/hooks/use-products";
+import type { Product } from "@/lib/services/products";
+
+// Helper function for price display
+function getMinPrice(product: { variants?: { price: number }[] }) {
+   if (!product.variants || product.variants.length === 0) return 0;
+   return Math.min(...product.variants.map((v) => v.price));
+}
+
+// Search results dropdown component - defined outside to avoid re-creation during render
+interface SearchResultsDropdownProps {
+   showResults: boolean;
+   searchQuery: string;
+   isSearching: boolean;
+   searchResults: Product[] | undefined;
+   onProductClick: (slug: string) => void;
+   onViewAllClick: (e: React.FormEvent) => void;
+}
+
+function SearchResultsDropdown({
+   showResults,
+   searchQuery,
+   isSearching,
+   searchResults,
+   onProductClick,
+   onViewAllClick,
+}: SearchResultsDropdownProps) {
+   if (!showResults || searchQuery.length < 2) return null;
+
+   return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-background border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+         {isSearching ? (
+            <div className="flex items-center justify-center py-6">
+               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+         ) : searchResults && searchResults.length > 0 ? (
+            <div className="py-2">
+               {searchResults.map((product) => (
+                  <button
+                     key={product.id}
+                     onClick={() => onProductClick(product.slug)}
+                     className="w-full flex items-center gap-3 px-4 py-2 hover:bg-muted transition-colors text-left"
+                  >
+                     <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
+                        {product.primary_image?.url ? (
+                           <Image
+                              src={product.primary_image.url}
+                              alt={product.name}
+                              fill
+                              className="object-cover"
+                              sizes="48px"
+                           />
+                        ) : (
+                           <div className="flex h-full w-full items-center justify-center">
+                              <Package className="h-5 w-5 text-muted-foreground" />
+                           </div>
+                        )}
+                     </div>
+                     <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{product.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                           ${getMinPrice(product).toFixed(2)}
+                        </p>
+                     </div>
+                  </button>
+               ))}
+               <div className="border-t mt-2 pt-2 px-4 pb-2">
+                  <button
+                     onClick={onViewAllClick}
+                     className="text-sm text-primary hover:underline"
+                  >
+                     View all results for &quot;{searchQuery}&quot;
+                  </button>
+               </div>
+            </div>
+         ) : (
+            <div className="py-6 text-center text-muted-foreground">
+               No products found
+            </div>
+         )}
+      </div>
+   );
+}
 
 export function Navbar() {
    const router = useRouter();
@@ -75,69 +157,6 @@ export function Navbar() {
       }
    }, [searchQuery, router]);
 
-   const getMinPrice = (product: { variants?: { price: number }[] }) => {
-      if (!product.variants || product.variants.length === 0) return 0;
-      return Math.min(...product.variants.map((v) => v.price));
-   };
-
-   const SearchResultsDropdown = () => {
-      if (!showResults || searchQuery.length < 2) return null;
-
-      return (
-         <div className="absolute top-full left-0 right-0 mt-2 bg-background border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
-            {isSearching ? (
-               <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-               </div>
-            ) : searchResults && searchResults.length > 0 ? (
-               <div className="py-2">
-                  {searchResults.map((product) => (
-                     <button
-                        key={product.id}
-                        onClick={() => handleProductClick(product.slug)}
-                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-muted transition-colors text-left"
-                     >
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-muted">
-                           {product.primary_image?.url ? (
-                              <Image
-                                 src={product.primary_image.url}
-                                 alt={product.name}
-                                 fill
-                                 className="object-cover"
-                                 sizes="48px"
-                              />
-                           ) : (
-                              <div className="flex h-full w-full items-center justify-center">
-                                 <Package className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                           )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                           <p className="font-medium truncate">{product.name}</p>
-                           <p className="text-sm text-muted-foreground">
-                              ${getMinPrice(product).toFixed(2)}
-                           </p>
-                        </div>
-                     </button>
-                  ))}
-                  <div className="border-t mt-2 pt-2 px-4 pb-2">
-                     <button
-                        onClick={handleSearchSubmit}
-                        className="text-sm text-primary hover:underline"
-                     >
-                        View all results for &quot;{searchQuery}&quot;
-                     </button>
-                  </div>
-               </div>
-            ) : (
-               <div className="py-6 text-center text-muted-foreground">
-                  No products found
-               </div>
-            )}
-         </div>
-      );
-   };
-
    return (
       <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur">
          <div className="container mx-auto px-4">
@@ -169,7 +188,14 @@ export function Navbar() {
                         </InputGroupAddon>
                      </InputGroup>
                   </form>
-                  <SearchResultsDropdown />
+                  <SearchResultsDropdown
+                     showResults={showResults}
+                     searchQuery={searchQuery}
+                     isSearching={isSearching}
+                     searchResults={searchResults}
+                     onProductClick={handleProductClick}
+                     onViewAllClick={handleSearchSubmit}
+                  />
                </div>
 
                {/* Mobile Search Bar - Shows when search is open */}
@@ -189,7 +215,14 @@ export function Navbar() {
                            />
                         </div>
                      </form>
-                     <SearchResultsDropdown />
+                     <SearchResultsDropdown
+                        showResults={showResults}
+                        searchQuery={searchQuery}
+                        isSearching={isSearching}
+                        searchResults={searchResults}
+                        onProductClick={handleProductClick}
+                        onViewAllClick={handleSearchSubmit}
+                     />
                   </div>
                )}
 

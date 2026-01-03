@@ -47,31 +47,28 @@ const CART_STORAGE_KEY = "hexa-shop-cart";
 // Provider
 // ============================================================================
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-   const [items, setItems] = useState<CartItem[]>([]);
-   const [isOpen, setIsOpen] = useState(false);
-   const [isHydrated, setIsHydrated] = useState(false);
-
-   // Hydrate cart from localStorage
-   useEffect(() => {
+// Helper to get initial cart from localStorage (runs once on mount)
+function getInitialCart(): CartItem[] {
+   if (typeof window === "undefined") return [];
+   try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
       if (stored) {
-         try {
-            const parsed = JSON.parse(stored);
-            setItems(parsed);
-         } catch {
-            console.error("Failed to parse cart from localStorage");
-         }
+         return JSON.parse(stored);
       }
-      setIsHydrated(true);
-   }, []);
+   } catch {
+      console.error("Failed to parse cart from localStorage");
+   }
+   return [];
+}
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+   const [items, setItems] = useState<CartItem[]>(getInitialCart);
+   const [isOpen, setIsOpen] = useState(false);
 
    // Persist cart to localStorage
    useEffect(() => {
-      if (isHydrated) {
-         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-      }
-   }, [items, isHydrated]);
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+   }, [items]);
 
    const openCart = useCallback(() => setIsOpen(true), []);
    const closeCart = useCallback(() => setIsOpen(false), []);

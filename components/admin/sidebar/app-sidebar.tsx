@@ -8,7 +8,6 @@ import {
   Users,
   Settings,
   ChevronRight,
-  Store,
   BarChart3,
   Tag,
   Truck,
@@ -79,11 +78,6 @@ const mainNavItems = [
 ];
 
 const settingsNavItems = [
-  {
-    title: "Store Settings",
-    icon: Store,
-    href: "/admin/settings/store",
-  },
   {
     title: "Shipping",
     icon: Truck,

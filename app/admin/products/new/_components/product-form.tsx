@@ -217,7 +217,8 @@ export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
          });
       };
 
-      const handleSetPrimaryImage = (imageId: string, isNew: boolean, index?: number) => {
+      // TODO: Implement primary image selection UI
+      const _handleSetPrimaryImage = (imageId: string, isNew: boolean, index?: number) => {
          if (isNew && index !== undefined) {
             // For new images, we'll handle primary status on submit
             // Just visually indicate it for now
@@ -230,6 +231,7 @@ export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
             setValue("existing_images", updated, { shouldDirty: true });
          }
       };
+      void _handleSetPrimaryImage; // Suppress unused warning until feature is implemented
 
       const isPending = addMutation.isPending || updateMutation.isPending;
 

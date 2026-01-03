@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/providers/cart-provider";
-import { cn } from "@/lib/utils";
 
 export function CartSheet() {
    const {
