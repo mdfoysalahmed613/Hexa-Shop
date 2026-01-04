@@ -155,7 +155,7 @@ export function CartSheet() {
                         </div>
                         <div className="flex items-center justify-between text-sm">
                            <span className="text-muted-foreground">Shipping</span>
-                           <span>Calculated at checkout</span>
+                           <span className="text-green-600">Free</span>
                         </div>
                         <Separator />
                         <div className="flex items-center justify-between font-medium">
@@ -165,10 +165,8 @@ export function CartSheet() {
                      </div>
 
                      <div className="flex flex-col gap-2 w-full">
-                        <Button size="lg" className="w-full" asChild>
-                           <Link href="/checkout" onClick={closeCart}>
-                              Proceed to Checkout
-                           </Link>
+                        <Button size="lg" className="w-full" asChild onClick={closeCart}>
+                           <Link href="/checkout">Proceed to Checkout</Link>
                         </Button>
                         <Button
                            variant="outline"

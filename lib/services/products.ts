@@ -491,6 +491,67 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
   }
 }
 
+/**
+ * Toggle product status by updating all variants' is_active status
+ * - If any variant is active, set all to inactive
+ * - If all variants are inactive, set all to active
+ * - Both admin and demo_admin can toggle
+ */
+export async function toggleProductStatus(id: string): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Both admin and demo_admin can toggle status
+    if (!hasAdminAccess(user)) {
+      return {
+        ok: false,
+        error: "Admin access required to toggle product status",
+      };
+    }
+
+    // Get current variants to determine new status
+    const { data: variants, error: fetchError } = await supabase
+      .from("products_variants")
+      .select("id, is_active")
+      .eq("product_id", id);
+
+    if (fetchError) {
+      console.error("Fetch variants error:", fetchError);
+      return { ok: false, error: "Failed to fetch product variants" };
+    }
+
+    if (!variants || variants.length === 0) {
+      return { ok: false, error: "Product has no variants to toggle" };
+    }
+
+    // Determine new status: if any variant is active, deactivate all; otherwise activate all
+    const hasActiveVariant = variants.some((v) => v.is_active);
+    const newStatus = !hasActiveVariant;
+
+    // Update all variants
+    const { error: updateError } = await supabase
+      .from("products_variants")
+      .update({ is_active: newStatus })
+      .eq("product_id", id);
+
+    if (updateError) {
+      console.error("Update error:", updateError);
+      return { ok: false, error: "Failed to toggle product status" };
+    }
+
+    revalidatePath("/admin/products");
+    return { ok: true };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    console.error("Toggle product status error:", e);
+    return { ok: false, error: message };
+  }
+}
+
 // ============================================================================
 // Read Operations
 // ============================================================================
@@ -530,8 +591,15 @@ export async function getProducts(): Promise<GetProductsResult> {
       const primaryImage =
         images.find((img: ProductImage) => img.is_primary) || images[0];
 
+      // Derive is_active from variants - product is active if any variant is active
+      const variants = product.variants || [];
+      const is_active = variants.some(
+        (v: { is_active: boolean }) => v.is_active
+      );
+
       return {
         ...product,
+        is_active,
         category: product.category_id, // Alias for backwards compatibility
         category_name: product.category_data?.name || product.category_id,
         primary_image: primaryImage,
@@ -582,8 +650,13 @@ export async function getProduct(id: string): Promise<GetProductResult> {
     const primaryImage =
       images.find((img: ProductImage) => img.is_primary) || images[0];
 
+    // Derive is_active from variants - product is active if any variant is active
+    const variants = data.variants || [];
+    const is_active = variants.some((v: { is_active: boolean }) => v.is_active);
+
     const product = {
       ...data,
+      is_active,
       category: data.category_id, // Alias for backwards compatibility
       category_name: data.category_data?.name || data.category_id,
       primary_image: primaryImage,

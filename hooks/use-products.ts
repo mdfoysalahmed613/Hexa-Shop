@@ -7,6 +7,7 @@ import {
   addProduct,
   updateProduct,
   deleteProduct,
+  toggleProductStatus,
   type Product,
 } from "@/lib/services/products";
 import { toast } from "sonner";
@@ -137,5 +138,26 @@ export function useSearchProducts(query: string, enabled: boolean = true) {
     },
     enabled: enabled && query.trim().length >= 2,
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+export function useToggleProductStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await toggleProductStatus(id);
+      if (!result.ok) {
+        throw new Error(result.error || "Failed to toggle product status");
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+      toast.success("Product status updated!");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
   });
 }
