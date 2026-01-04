@@ -1,3 +1,20 @@
+/**
+ * Products Hooks
+ *
+ * TanStack Query hooks for product data fetching and mutations.
+ * Provides automatic cache invalidation and toast notifications.
+ *
+ * Hooks:
+ * - useProducts() - Fetch all products
+ * - useProduct(id) - Fetch single product by ID
+ * - useProductBySlug(slug) - Fetch product by URL slug
+ * - useSearchProducts(query) - Search products
+ * - useAddProduct() - Create product mutation
+ * - useUpdateProduct() - Update product mutation
+ * - useDeleteProduct() - Delete product mutation
+ * - useToggleProductStatus() - Toggle active/inactive
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getProducts,

@@ -1,5 +1,19 @@
 "use client";
 
+/**
+ * Checkout Dialog
+ *
+ * Modal form for completing orders. Collects shipping info and processes payment.
+ * Shows order confirmation on success with order number.
+ *
+ * Features:
+ * - Pre-fills user email/name from auth session
+ * - Validates required shipping fields via Zod schema
+ * - Shows order summary with items and totals
+ * - Displays success state with order number
+ * - Clears cart on successful order
+ */
+
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

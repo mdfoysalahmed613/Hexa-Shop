@@ -1,4 +1,15 @@
-// Role helpers. Admin role is set in Supabase app metadata.
+/**
+ * Role Utilities
+ *
+ * Helper functions to check user authorization levels.
+ * Roles are stored in Supabase app_metadata.role field.
+ *
+ * Role Hierarchy:
+ * - admin: Full access (CRUD all resources)
+ * - demo_admin: Limited write access (no deletes)
+ * - user: Customer access (own data only)
+ */
+
 import { User } from "@supabase/supabase-js";
 
 /**

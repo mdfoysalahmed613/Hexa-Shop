@@ -1,3 +1,18 @@
+/**
+ * Swipe Gesture Hook
+ *
+ * Handles touch swipe gestures for mobile interactions.
+ * Provides swipe detection with configurable threshold.
+ *
+ * Usage:
+ * const { handlers, swipeOffset, isSwiping } = useSwipe({
+ *   onSwipeLeft: () => goNext(),
+ *   onSwipeRight: () => goPrev(),
+ *   threshold: 50,
+ * });
+ * return <div {...handlers}>Swipeable content</div>;
+ */
+
 import { useState, useCallback } from "react";
 
 interface UseSwipeOptions {

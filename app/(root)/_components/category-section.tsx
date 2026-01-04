@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * Category Section
+ *
+ * Homepage section displaying product categories as cards.
+ * Links to category-filtered products page.
+ *
+ * Features:
+ * - Grid layout (responsive: 2-6 columns)
+ * - Category images with fallback icon
+ * - Product count per category
+ * - Loading skeletons
+ */
+
 import Link from "next/link";
 import Image from "next/image";
 import { useCategories } from "@/hooks/use-categories";

@@ -1,5 +1,24 @@
 "use server";
 
+/**
+ * Orders Service
+ *
+ * Server Actions for order management and checkout.
+ * Handles order creation, status updates, and statistics.
+ *
+ * Functions:
+ * - createOrder(input) - Create order from checkout
+ * - getOrders() - List all orders (admin)
+ * - getOrder(id) - Get single order with items
+ * - getMyOrders() - Get current user's orders
+ * - updateOrderStatus(id, status) - Update order status (admin)
+ * - updatePaymentStatus(id, status) - Update payment status (admin)
+ * - deleteOrder(id) - Delete order (admin only)
+ * - getOrderStats() - Get aggregated statistics
+ *
+ * Order Flow: processing → delivered | cancelled
+ */
+
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { hasAdminAccess, isAdmin } from "@/lib/auth/roles";

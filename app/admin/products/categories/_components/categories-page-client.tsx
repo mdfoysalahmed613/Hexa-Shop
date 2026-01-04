@@ -1,5 +1,20 @@
 "use client";
 
+/**
+ * Categories Page Client
+ *
+ * Admin category management with hierarchical tree view.
+ * Supports nested parent/child category structure.
+ *
+ * Features:
+ * - Category statistics cards (total, active, inactive)
+ * - Hierarchical tree display with indentation
+ * - Search/filter categories
+ * - Add category panel (side drawer)
+ * - Edit category dialog
+ * - Toggle category status
+ */
+
 import { useState, useMemo } from "react";
 import {
   FolderTree,

@@ -1,5 +1,22 @@
 "use client";
 
+/**
+ * Checkout Page Client
+ *
+ * Full-page checkout flow with order summary and shipping form.
+ * Displays order confirmation after successful submission.
+ *
+ * Layout:
+ * - Left: Shipping form (pre-filled from user session)
+ * - Right: Order summary (cart items, totals)
+ *
+ * Flow:
+ * 1. User fills shipping details
+ * 2. Form validates via Zod schema
+ * 3. Order created via useCreateOrder mutation
+ * 4. Success screen with order number
+ */
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";

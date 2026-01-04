@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Update Password Form
+ *
+ * Allows users to set a new password after clicking reset link.
+ * Redirects to home page after successful password update.
+ */
+
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";

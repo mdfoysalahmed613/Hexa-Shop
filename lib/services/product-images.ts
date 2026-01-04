@@ -1,5 +1,21 @@
 "use server";
 
+/**
+ * Product Images Service
+ *
+ * Server Actions for managing product images.
+ * Handles image upload, deletion, reordering, and primary image selection.
+ *
+ * Functions:
+ * - getProductImages(productId) - Get all images for a product
+ * - uploadProductImage(productId, file) - Upload new image
+ * - deleteProductImage(imageId) - Delete image from storage
+ * - setPrimaryImage(productId, imageId) - Set primary display image
+ * - reorderImages(productId, imageIds) - Update display order
+ *
+ * Storage: Images stored in 'product-images' bucket (2MB limit)
+ */
+
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { hasAdminAccess, isAdmin } from "@/lib/auth/roles";

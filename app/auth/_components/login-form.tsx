@@ -1,6 +1,19 @@
 "use client";
-// Email/password login form with Google OAuth.
-// Respects `?redirect=` query to send users back post-login.
+
+/**
+ * Login Form
+ *
+ * Email/password authentication form with Google OAuth option.
+ * Respects `?redirect=` query param to return users to their intended page.
+ *
+ * Features:
+ * - Email/password login via Supabase Auth
+ * - Google OAuth button
+ * - Error message display
+ * - Loading state during authentication
+ * - Link to signup and forgot password
+ */
+
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { GoogleAuthButton } from "./google-auth-button";

@@ -1,5 +1,19 @@
 "use client";
 
+/**
+ * Products Content
+ *
+ * Main products listing page with filtering and sorting.
+ * Supports grid/list view toggle and category filtering.
+ *
+ * Features:
+ * - Category filter via URL params (?category=slug)
+ * - Search filter via URL params (?search=query)
+ * - Sort options: newest, price (low/high), name (A-Z/Z-A)
+ * - Grid and list view modes
+ * - Quick add to cart from product cards
+ */
+
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";

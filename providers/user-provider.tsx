@@ -1,5 +1,17 @@
 "use client";
 
+/**
+ * User Provider
+ *
+ * Manages authentication state across the application using Supabase Auth.
+ * Subscribes to auth state changes for real-time session updates.
+ *
+ * Usage:
+ * - Wrap app with <UserProvider> in root layout
+ * - Access user via useUser() hook in client components
+ * - Call refreshUser() after role/metadata updates to sync state
+ */
+
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";

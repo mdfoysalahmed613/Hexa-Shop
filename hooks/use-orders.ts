@@ -1,3 +1,20 @@
+/**
+ * Orders Hooks
+ *
+ * TanStack Query hooks for order data fetching and mutations.
+ * Provides admin order management and customer order history.
+ *
+ * Hooks:
+ * - useOrders() - Fetch all orders (admin)
+ * - useOrder(id) - Fetch single order by ID
+ * - useMyOrders() - Fetch current user's orders
+ * - useOrderStats() - Fetch order statistics (admin)
+ * - useCreateOrder() - Create order (checkout)
+ * - useUpdateOrderStatus() - Update order status (admin)
+ * - useUpdatePaymentStatus() - Update payment status (admin)
+ * - useDeleteOrder() - Delete order (admin only)
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getOrders,

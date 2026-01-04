@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Forgot Password Form
+ *
+ * Sends password reset email to user.
+ * Shows success message after email is sent.
+ */
+
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";

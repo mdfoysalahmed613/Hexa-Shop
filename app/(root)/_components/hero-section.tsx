@@ -1,5 +1,14 @@
-// Marketing hero section with static image. Uses blur placeholder
-// to avoid layout/pop-in glitches during image load.
+/**
+ * Hero Section
+ *
+ * Landing page hero banner with promotional content.
+ * Features blur placeholder for image loading optimization.
+ *
+ * Layout:
+ * - Left: Headline, description, CTA buttons, stats
+ * - Right: Featured product/model image
+ */
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";

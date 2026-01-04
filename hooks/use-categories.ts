@@ -1,3 +1,18 @@
+/**
+ * Categories Hooks
+ *
+ * TanStack Query hooks for category data fetching and mutations.
+ * Provides automatic cache invalidation and toast notifications.
+ *
+ * Hooks:
+ * - useCategories() - Fetch all categories
+ * - useCategory(id) - Fetch single category by ID
+ * - useAddCategory() - Create category mutation
+ * - useUpdateCategory() - Update category mutation
+ * - useDeleteCategory() - Delete category mutation
+ * - useToggleCategoryStatus() - Toggle active/inactive
+ */
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCategories,

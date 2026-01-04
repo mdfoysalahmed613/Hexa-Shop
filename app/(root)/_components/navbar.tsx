@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * Navbar
+ *
+ * Main site navigation with search, cart, and user menu.
+ * Features live product search with dropdown results.
+ *
+ * Components:
+ * - Logo and brand link
+ * - Product search with debounced query and live results
+ * - Cart icon with item count badge
+ * - Auth button (login/user menu)
+ */
+
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -8,12 +21,12 @@ import { Input } from "@/components/ui/input";
 import { ShoppingCart, Search, X, Hexagon, Package, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import AuthButton from "./auth-button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { useCart } from "@/providers/cart-provider";
 import { Badge } from "@/components/ui/badge";
 import { useSearchProducts } from "@/hooks/use-products";
 import type { Product } from "@/lib/services/products";
+import AuthButton from "./auth-button";
 
 // Helper function for price display
 function getMinPrice(product: { variants?: { price: number }[] }) {

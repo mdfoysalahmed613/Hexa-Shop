@@ -1,4 +1,19 @@
 "use client";
+
+/**
+ * Sign Up Form
+ *
+ * New user registration form with Google OAuth option.
+ * Sends email confirmation link after successful signup.
+ *
+ * Features:
+ * - Email/password registration via Supabase Auth
+ * - Password confirmation validation
+ * - Google OAuth button
+ * - Redirects to success page after signup
+ * - Error message display
+ */
+
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { GoogleAuthButton } from "./google-auth-button";

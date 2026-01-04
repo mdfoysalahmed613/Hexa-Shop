@@ -1,5 +1,22 @@
 "use server";
 
+/**
+ * Categories Service
+ *
+ * Server Actions for category CRUD operations.
+ * All mutations require admin access and revalidate relevant paths.
+ *
+ * Functions:
+ * - getCategories() - List all categories with product counts
+ * - getCategory(id) - Get single category by ID
+ * - addCategory(formData) - Create category with image upload
+ * - updateCategory(id, formData) - Update category
+ * - deleteCategory(id) - Delete category (admin only)
+ * - toggleCategoryStatus(id) - Toggle active/inactive
+ *
+ * Storage: Images stored in 'category-images' bucket (2MB limit)
+ */
+
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { hasAdminAccess, isAdmin } from "@/lib/auth/roles";

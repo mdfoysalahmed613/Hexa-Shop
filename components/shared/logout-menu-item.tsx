@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Logout Menu Item
+ *
+ * Dropdown menu item that signs out the current user.
+ * Triggers Supabase auth signOut and refreshes the page.
+ */
+
 import { createClient } from "@/lib/supabase/client";
 import { LogOut } from "lucide-react";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";

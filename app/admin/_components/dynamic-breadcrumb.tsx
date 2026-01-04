@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Dynamic Breadcrumb
+ *
+ * Auto-generates breadcrumb navigation from current pathname.
+ * Maps URL segments to human-readable labels.
+ */
+
 import { usePathname } from "next/navigation";
 import {
    Breadcrumb,
@@ -10,6 +17,7 @@ import {
    BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
+// Maps URL segments to display labels
 const breadcrumbLabels: Record<string, string> = {
    admin: "Admin",
    dashboard: "Dashboard",

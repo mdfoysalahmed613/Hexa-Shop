@@ -1,5 +1,19 @@
 "use client";
 
+/**
+ * Products Page Client
+ *
+ * Admin products management with data table and statistics.
+ * Provides CRUD operations for product catalog.
+ *
+ * Features:
+ * - Product statistics cards (total, active, out of stock)
+ * - Searchable/sortable data table with product images
+ * - Quick actions: edit, toggle status, delete
+ * - Delete confirmation dialog
+ * - Empty state for no products
+ */
+
 import { useState, useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";

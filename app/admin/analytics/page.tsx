@@ -1,3 +1,16 @@
+/**
+ * Analytics Page
+ *
+ * Displays business analytics and performance metrics.
+ * Currently shows placeholder data - integrate with real analytics service.
+ *
+ * Sections:
+ * - Overview stats (revenue, orders, customers, products)
+ * - Revenue chart (monthly breakdown)
+ * - Top products table
+ * - Recent activity feed
+ */
+
 import {
    Card,
    CardContent,

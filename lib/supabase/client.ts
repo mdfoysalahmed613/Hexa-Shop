@@ -1,5 +1,11 @@
-// Supabase browser client for Client Components.
-// Use only on the client; avoids SSR cookie handling.
+/**
+ * Supabase Browser Client
+ *
+ * Creates a Supabase client for Client Components.
+ * Uses browser-based auth with automatic session management.
+ * Safe to call multiple times - internally cached by @supabase/ssr.
+ */
+
 import { createBrowserClient } from "@supabase/ssr";
 
 export function createClient() {

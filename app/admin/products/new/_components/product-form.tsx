@@ -1,5 +1,23 @@
 "use client";
 
+/**
+ * Product Form
+ *
+ * Comprehensive form for creating/editing products.
+ * Handles product details, variants, and image uploads.
+ *
+ * Features:
+ * - Basic info: name, description (rich text), category
+ * - Multiple variants with price, compare price, stock
+ * - Multi-image upload with drag-and-drop
+ * - Primary image selection
+ * - Form validation via Zod schema
+ *
+ * Used by:
+ * - /admin/products/new (create mode)
+ * - /admin/products/[id]/edit (edit mode)
+ */
+
 import { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
 import { useForm, Controller, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

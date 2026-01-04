@@ -1,4 +1,19 @@
 "use client";
+
+/**
+ * Auth Button
+ *
+ * User authentication button for navbar.
+ * Shows login button for guests, user menu for authenticated users.
+ *
+ * User Menu:
+ * - Profile editing
+ * - Admin panel link (if admin/demo_admin role)
+ * - Become demo admin (for regular users)
+ * - Theme switcher
+ * - Logout
+ */
+
 import Link from "next/link";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";

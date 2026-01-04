@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * User Avatar
+ *
+ * Displays user's avatar image with fallback to initials.
+ * Extracts initials from full name or email when no avatar is set.
+ */
+
 import { User } from "@supabase/supabase-js";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 

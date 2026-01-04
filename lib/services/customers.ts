@@ -1,5 +1,20 @@
 "use server";
 
+/**
+ * Purpose:
+ * Provides server-side functions to manage customer (user) data
+ * from Supabase Auth for the admin dashboard.
+ *
+ * Usage:
+ * - getCustomers: Fetches a list of all customers
+ * - getCustomerById: Fetches details of a single customer by ID
+ *
+ * Features:
+ * - Requires admin access for data retrieval
+ * - Maps Supabase Auth user data to Customer interface
+ *
+ * ============================================================================
+ */
 import { createClient } from "@/lib/supabase/server";
 import { adminAuthClient } from "@/lib/supabase/supabase-admin";
 import { hasAdminAccess } from "@/lib/auth/roles";
@@ -115,5 +130,110 @@ export async function getCustomerById(id: string): Promise<GetCustomerResult> {
   } catch (err) {
     console.error("Unexpected error fetching customer:", err);
     return { ok: false, error: "Failed to fetch customer" };
+  }
+}
+
+// ============================================================================
+// Admin Actions
+// ============================================================================
+
+interface ActionResult {
+  ok: boolean;
+  error?: string;
+}
+
+/**
+ * Make a user an admin
+ * Only full admins can perform this action (not demo_admin)
+ */
+export async function makeUserAdmin(userId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Only full admin can make others admin
+  if (!user || user.app_metadata?.role !== "admin") {
+    return { ok: false, error: "Only admin users can perform this action" };
+  }
+
+  try {
+    // First check the target user's current role
+    const { data: targetUser, error: fetchError } =
+      await adminAuthClient.getUserById(userId);
+
+    if (fetchError || !targetUser.user) {
+      return { ok: false, error: "User not found" };
+    }
+
+    const currentRole = targetUser.user.app_metadata?.role;
+    if (currentRole === "admin") {
+      return { ok: false, error: "User is already an admin" };
+    }
+
+    // Update the user's role to admin
+    const { error } = await adminAuthClient.updateUserById(userId, {
+      app_metadata: { role: "admin" },
+    });
+
+    if (error) {
+      console.error("Error making user admin:", error);
+      return { ok: false, error: error.message };
+    }
+
+    return { ok: true };
+  } catch (err) {
+    console.error("Unexpected error making user admin:", err);
+    return { ok: false, error: "Failed to make user admin" };
+  }
+}
+
+/**
+ * Delete a user
+ * Only full admins can delete users (not demo_admin)
+ * Cannot delete admin or demo_admin users
+ */
+export async function deleteCustomer(userId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Only full admin can delete users
+  if (!user || user.app_metadata?.role !== "admin") {
+    return { ok: false, error: "Only admin users can delete users" };
+  }
+
+  // Prevent self-deletion
+  if (user.id === userId) {
+    return { ok: false, error: "Cannot delete your own account" };
+  }
+
+  try {
+    // First check the target user's current role
+    const { data: targetUser, error: fetchError } =
+      await adminAuthClient.getUserById(userId);
+
+    if (fetchError || !targetUser.user) {
+      return { ok: false, error: "User not found" };
+    }
+
+    const targetRole = targetUser.user.app_metadata?.role;
+    if (targetRole === "admin") {
+      return { ok: false, error: "Cannot delete admins" };
+    }
+
+    // Delete the user
+    const { error } = await adminAuthClient.deleteUser(userId);
+
+    if (error) {
+      console.error("Error deleting user:", error);
+      return { ok: false, error: error.message };
+    }
+
+    return { ok: true };
+  } catch (err) {
+    console.error("Unexpected error deleting user:", err);
+    return { ok: false, error: "Failed to delete user" };
   }
 }

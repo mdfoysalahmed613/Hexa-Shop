@@ -1,6 +1,18 @@
 "use client";
-// Edit profile dialog: updates user profile fields and avatar in Supabase.
-// Handles client-side validation and upload constraints (type/size) with feedback.
+
+/**
+ * Edit Profile Dialog
+ *
+ * Modal for updating user profile information and avatar.
+ * Handles avatar upload to Supabase Storage with optimistic UI updates.
+ *
+ * Features:
+ * - Full name and phone number editing
+ * - Avatar upload with preview (max 2MB, images only)
+ * - Avatar removal option
+ * - Validates file type and size before upload
+ * - Updates Supabase Auth user metadata
+ */
 
 import { useState, useRef, useEffect } from "react";
 import { User } from "@supabase/supabase-js";

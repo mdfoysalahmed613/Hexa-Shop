@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * Orders Content
+ *
+ * Admin orders management page with data table and statistics.
+ * Displays all orders with filtering, sorting, and quick actions.
+ *
+ * Features:
+ * - Order statistics cards (total, processing, delivered, revenue)
+ * - Searchable/sortable data table
+ * - Status badges with icons
+ * - Quick view action to order details
+ */
+
 import { useMemo } from "react";
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";

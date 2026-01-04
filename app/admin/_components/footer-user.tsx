@@ -1,4 +1,12 @@
 "use client"
+
+/**
+ * Footer User
+ *
+ * Sidebar footer component showing current user info with dropdown menu.
+ * Provides quick access to profile editing, theme switcher, and logout.
+ */
+
 import {
    DropdownMenu,
    DropdownMenuContent,

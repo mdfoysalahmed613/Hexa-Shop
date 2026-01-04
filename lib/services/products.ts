@@ -1,5 +1,25 @@
 "use server";
 
+/**
+ * Products Service
+ *
+ * Server Actions for product CRUD operations.
+ * Products support variants (price, stock) and multiple images.
+ *
+ * Functions:
+ * - getProducts() - List all products with relations
+ * - getProduct(id) - Get single product by ID
+ * - getProductBySlug(slug) - Get product by URL slug
+ * - getProductsByCategory(categoryId) - Filter by category
+ * - searchProducts(query) - Full-text search
+ * - addProduct(formData) - Create product with variants/images
+ * - updateProduct(id, formData) - Update product
+ * - deleteProduct(id) - Delete product (admin only)
+ * - toggleProductStatus(id) - Toggle active/inactive
+ *
+ * Storage: Images stored in 'product-images' bucket (2MB limit)
+ */
+
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { hasAdminAccess, isAdmin } from "@/lib/auth/roles";

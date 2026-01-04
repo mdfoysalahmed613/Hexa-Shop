@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Google Auth Button
+ *
+ * OAuth button for Google sign-in via Supabase Auth.
+ * Preserves redirect URL through OAuth flow.
+ */
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";

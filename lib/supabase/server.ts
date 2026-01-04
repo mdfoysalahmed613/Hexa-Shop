@@ -1,5 +1,15 @@
-// Supabase server client for SSR/Route Handlers.
-// Create a fresh client per call; do not cache in module scope.
+/**
+ * Supabase Server Client
+ *
+ * Creates a Supabase client for Server Components and Route Handlers.
+ * IMPORTANT: Always await createClient() inside each function - never cache at module scope.
+ *
+ * This pattern is required for:
+ * - Proper cookie handling in SSR
+ * - Fluid compute compatibility (Vercel)
+ * - Correct session management per request
+ */
+
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 /**

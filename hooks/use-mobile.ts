@@ -1,5 +1,13 @@
-// Responsive helper hook: detects client viewport under MOBILE_BREAKPOINT.
-// Returns false on SSR until hydrated.
+/**
+ * Mobile Detection Hook
+ *
+ * Responsive helper that detects viewport width under MOBILE_BREAKPOINT (768px).
+ * Returns false during SSR until hydrated to avoid hydration mismatch.
+ *
+ * Usage:
+ * const isMobile = useIsMobile();
+ * if (isMobile) return <MobileView />;
+ */
 import * as React from "react";
 
 const MOBILE_BREAKPOINT = 768;

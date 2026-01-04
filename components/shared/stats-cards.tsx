@@ -1,3 +1,17 @@
+/**
+ * Stats Cards
+ *
+ * Reusable grid of statistic cards with icons and optional color coding.
+ * Supports loading skeletons and responsive column layout.
+ *
+ * Props:
+ * - stats: Array of { label, value, icon, color? }
+ * - isLoading: Shows skeleton placeholders
+ * - className: Additional grid styling
+ *
+ * Colors: default, success, warning, danger, info
+ */
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { type LucideIcon } from "lucide-react";

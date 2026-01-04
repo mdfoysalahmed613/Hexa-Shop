@@ -1,5 +1,19 @@
 "use client";
 
+/**
+ * Cart Sheet
+ *
+ * Slide-out panel displaying shopping cart contents.
+ * Shows cart items with quantity controls, pricing, and checkout link.
+ *
+ * Features:
+ * - Empty cart state with "Continue Shopping" CTA
+ * - Per-item quantity increment/decrement (respects stock limits)
+ * - Item removal with confirmation
+ * - Subtotal calculation
+ * - Links to full checkout page
+ */
+
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";

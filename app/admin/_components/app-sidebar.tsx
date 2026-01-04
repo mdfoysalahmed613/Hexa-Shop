@@ -1,5 +1,19 @@
 "use client";
-// Admin sidebar navigation. Collapsible groups reflect current route via pathname.
+
+/**
+ * Admin Sidebar
+ *
+ * Main navigation for admin panel. Features collapsible menu groups
+ * that expand based on current route. Includes user profile footer.
+ *
+ * Structure:
+ * - Dashboard (single link)
+ * - Products (submenu: All, Categories, Inventory)
+ * - Orders (single link)
+ * - Customers (single link)
+ * - Analytics (single link)
+ * - Settings (submenu: Store, Shipping)
+ */
 
 import {
   LayoutDashboard,

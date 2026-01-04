@@ -1,5 +1,17 @@
 'use client';
 
+/**
+ * Become Demo Admin Button
+ *
+ * Allows authenticated users to gain demo_admin role for exploring admin panel.
+ * Shows confirmation dialog before role assignment.
+ *
+ * Demo Admin Limitations:
+ * - Can create and update records
+ * - Cannot delete any records
+ * - Full read access to admin panel
+ */
+
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useState } from 'react';

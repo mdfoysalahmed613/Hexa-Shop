@@ -1,5 +1,17 @@
 "use client";
 
+/**
+ * Cart Provider
+ *
+ * Manages shopping cart state across the application using React Context.
+ * Persists cart items to localStorage for session continuity.
+ *
+ * Usage:
+ * - Wrap app with <CartProvider> in root layout
+ * - Access cart via useCart() hook in any client component
+ * - Exposes: items, addItem, removeItem, updateQuantity, clearCart, subtotal
+ */
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { Product, ProductVariant } from "@/lib/services/products";
 
