@@ -1,11 +1,9 @@
-// Admin layout shell. Sidebar + breadcrumb header wrapping child pages.
-// Auth/role protection is handled via middleware.
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { AppSidebar } from "@/components/admin/sidebar/app-sidebar";
-import { DynamicBreadcrumb } from "@/components/admin/dynamic-breadcrumb";
+import { DynamicBreadcrumb } from "@/app/admin/_components/dynamic-breadcrumb";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { AppSidebar } from "./_components/app-sidebar";
 
 const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
    return (
