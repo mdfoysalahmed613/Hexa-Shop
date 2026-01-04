@@ -17,7 +17,7 @@
  */
 import { createClient } from "@/lib/supabase/server";
 import { adminAuthClient } from "@/lib/supabase/supabase-admin";
-import { hasAdminAccess } from "@/lib/auth/roles";
+import { hasAdminAccess, isAdmin } from "@/lib/auth/roles";
 
 export interface Customer {
   id: string;
@@ -200,7 +200,7 @@ export async function deleteCustomer(userId: string): Promise<ActionResult> {
   } = await supabase.auth.getUser();
 
   // Only full admin can delete users
-  if (!user || user.app_metadata?.role !== "admin") {
+  if (!user || !isAdmin(user)) {
     return { ok: false, error: "Only admin users can delete users" };
   }
 

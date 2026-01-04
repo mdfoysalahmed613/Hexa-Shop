@@ -53,7 +53,6 @@ import {
 import { useCustomers, useMakeAdmin, useDeleteCustomer } from "@/hooks/use-customers";
 import { StatsCards } from "@/components/shared/stats-cards";
 import { DataTable } from "@/components/ui/data-table";
-import { toast } from "sonner";
 import type { Customer } from "@/lib/services/customers";
 
 // ============================================================================
@@ -119,7 +118,7 @@ function ActionsCell({ customer, onMakeAdmin, onDelete }: ActionsCellProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
                onClick={handleDelete}
-               className="text-destructive focus:text-destructive"
+               variant="destructive"
             >
                <Trash2 className="mr-2 h-4 w-4" />
                Delete User
