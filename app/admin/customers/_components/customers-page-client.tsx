@@ -280,7 +280,6 @@ export function CustomersPageClient() {
       },
       {
          id: "actions",
-         header: "Actions",
          cell: ({ row }) => (
             <ActionsCell
                customer={row.original}

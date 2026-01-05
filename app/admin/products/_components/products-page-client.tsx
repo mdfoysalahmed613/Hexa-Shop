@@ -11,6 +11,7 @@
  * - Searchable/sortable data table with product images
  * - Quick actions: edit, toggle status, delete
  * - Delete confirmation dialog
+ * - Filtering by category, status, price range, stock
  * - Empty state for no products
  */
 
@@ -21,6 +22,21 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from "@/components/ui/select";
+import {
+   Popover,
+   PopoverContent,
+   PopoverTrigger,
+} from "@/components/ui/popover";
 import {
    Package,
    Plus,
@@ -32,6 +48,10 @@ import {
    CheckCircle2,
    XCircle,
    Power,
+   Search,
+   Filter,
+   X,
+   ArrowUpDown,
 } from "lucide-react";
 import {
    DropdownMenu,
@@ -51,9 +71,22 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProducts, useDeleteProduct, useToggleProductStatus } from "@/hooks/use-products";
+import { useCategories } from "@/hooks/use-categories";
 import { StatsCards } from "@/components/shared/stats-cards";
 import { DataTable } from "@/components/ui/data-table";
 import type { Product } from "@/lib/services/products";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+interface ProductFilters {
+   search: string;
+   category: string;
+   status: string;
+   stockStatus: string;
+   priceRange: [number, number];
+}
 
 // ============================================================================
 // Helper Functions
@@ -83,13 +116,85 @@ function getStockStatus(stock: number): {
 // Component
 // ============================================================================
 
+const defaultFilters: ProductFilters = {
+   search: "",
+   category: "all",
+   status: "all",
+   stockStatus: "all",
+   priceRange: [0, 10000],
+};
+
 export function ProductsPageClient() {
    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+   const [filters, setFilters] = useState<ProductFilters>(defaultFilters);
 
    const { data: products = [], isLoading } = useProducts();
+   const { data: categories = [] } = useCategories();
    const deleteMutation = useDeleteProduct();
    const toggleMutation = useToggleProductStatus();
+
+   // Calculate max price for slider
+   const maxPrice = useMemo(() => {
+      if (products.length === 0) return 10000;
+      const prices = products.flatMap(p => p.variants?.map(v => v.price) ?? []);
+      return Math.max(...prices, 10000);
+   }, [products]);
+
+   // Filter products based on all filters
+   const filteredProducts = useMemo(() => {
+      return products.filter((product) => {
+         // Search filter
+         if (filters.search) {
+            const query = filters.search.toLowerCase();
+            const name = product.name.toLowerCase();
+            const category = product.category_name?.toLowerCase() || "";
+            if (!name.includes(query) && !category.includes(query)) {
+               return false;
+            }
+         }
+
+         // Category filter
+         if (filters.category !== "all" && product.category_id !== filters.category) {
+            return false;
+         }
+
+         // Status filter
+         if (filters.status !== "all") {
+            if (filters.status === "active" && !product.is_active) return false;
+            if (filters.status === "draft" && product.is_active) return false;
+         }
+
+         // Stock status filter
+         const totalStock = getTotalStock(product);
+         if (filters.stockStatus !== "all") {
+            if (filters.stockStatus === "in_stock" && totalStock <= 10) return false;
+            if (filters.stockStatus === "low_stock" && (totalStock === 0 || totalStock > 10)) return false;
+            if (filters.stockStatus === "out_of_stock" && totalStock !== 0) return false;
+         }
+
+         // Price range filter
+         const priceDisplay = getPriceDisplay(product);
+         if (priceDisplay) {
+            if (priceDisplay.min < filters.priceRange[0] || priceDisplay.max > filters.priceRange[1]) {
+               return false;
+            }
+         }
+
+         return true;
+      });
+   }, [products, filters]);
+
+   // Check if any filters are active
+   const hasActiveFilters = useMemo(() => {
+      return (
+         filters.category !== "all" ||
+         filters.status !== "all" ||
+         filters.stockStatus !== "all" ||
+         filters.priceRange[0] !== 0 ||
+         filters.priceRange[1] !== maxPrice
+      );
+   }, [filters, maxPrice]);
 
    // Stats
    const stats = useMemo(() => {
@@ -182,8 +287,21 @@ export function ProductsPageClient() {
             },
          },
          {
-            accessorKey: "price",
-            header: "Price",
+            id: "price",
+            accessorFn: (row) => {
+               const priceDisplay = getPriceDisplay(row);
+               return priceDisplay ? priceDisplay.min : 0;
+            },
+            header: ({ column }) => (
+               <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                  className="-ml-4"
+               >
+                  Price
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+               </Button>
+            ),
             cell: ({ row }) => {
                const priceDisplay = getPriceDisplay(row.original);
                if (!priceDisplay) {
@@ -200,8 +318,18 @@ export function ProductsPageClient() {
             },
          },
          {
-            accessorKey: "stock",
-            header: "Stock",
+            id: "stock",
+            accessorFn: (row) => getTotalStock(row),
+            header: ({ column }) => (
+               <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                  className="-ml-4"
+               >
+                  Stock
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+               </Button>
+            ),
             cell: ({ row }) => {
                const totalStock = getTotalStock(row.original);
                const stockStatus = getStockStatus(totalStock);
@@ -292,8 +420,129 @@ export function ProductsPageClient() {
 
          {/* Products Table */}
          <Card>
-            <CardHeader>
-               <CardTitle>All Products ({products.length})</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+               <CardTitle>All Products ({filteredProducts.length})</CardTitle>
+               <div className="flex items-center gap-3">
+                  {/* Search */}
+                  <div className="relative w-72">
+                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                     <Input
+                        placeholder="Search products..."
+                        value={filters.search}
+                        onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                        className="pl-9"
+                     />
+                  </div>
+
+                  {/* Filters Popover */}
+                  <Popover>
+                     <PopoverTrigger asChild>
+                        <Button variant="outline" className="gap-2">
+                           <Filter className="h-4 w-4" />
+                           Filters
+                           {hasActiveFilters && (
+                              <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
+                                 !
+                              </Badge>
+                           )}
+                        </Button>
+                     </PopoverTrigger>
+                     <PopoverContent className="w-80" align="end">
+                        <div className="space-y-4">
+                           <div className="flex items-center justify-between">
+                              <h4 className="font-medium">Filters</h4>
+                              {hasActiveFilters && (
+                                 <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setFilters({ ...defaultFilters, search: filters.search, priceRange: [0, maxPrice] })}
+                                    className="h-8 px-2 text-xs"
+                                 >
+                                    <X className="mr-1 h-3 w-3" />
+                                    Clear
+                                 </Button>
+                              )}
+                           </div>
+
+                           {/* Category Filter */}
+                           <div className="space-y-2">
+                              <Label>Category</Label>
+                              <Select
+                                 value={filters.category}
+                                 onValueChange={(value) => setFilters((prev) => ({ ...prev, category: value }))}
+                              >
+                                 <SelectTrigger>
+                                    <SelectValue placeholder="All Categories" />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                    <SelectItem value="all">All Categories</SelectItem>
+                                    {categories.map((cat) => (
+                                       <SelectItem key={cat.id} value={cat.id}>
+                                          {cat.name}
+                                       </SelectItem>
+                                    ))}
+                                 </SelectContent>
+                              </Select>
+                           </div>
+
+                           {/* Status Filter */}
+                           <div className="space-y-2">
+                              <Label>Status</Label>
+                              <Select
+                                 value={filters.status}
+                                 onValueChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
+                              >
+                                 <SelectTrigger>
+                                    <SelectValue placeholder="All Status" />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                    <SelectItem value="all">All Status</SelectItem>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="draft">Draft</SelectItem>
+                                 </SelectContent>
+                              </Select>
+                           </div>
+
+                           {/* Stock Status Filter */}
+                           <div className="space-y-2">
+                              <Label>Stock Availability</Label>
+                              <Select
+                                 value={filters.stockStatus}
+                                 onValueChange={(value) => setFilters((prev) => ({ ...prev, stockStatus: value }))}
+                              >
+                                 <SelectTrigger>
+                                    <SelectValue placeholder="All Stock" />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                    <SelectItem value="all">All Stock</SelectItem>
+                                    <SelectItem value="in_stock">In Stock</SelectItem>
+                                    <SelectItem value="low_stock">Low Stock</SelectItem>
+                                    <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                                 </SelectContent>
+                              </Select>
+                           </div>
+
+                           {/* Price Range Filter */}
+                           <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                 <Label>Price Range</Label>
+                                 <span className="text-sm text-muted-foreground">
+                                    ${filters.priceRange[0]} - ${filters.priceRange[1]}
+                                 </span>
+                              </div>
+                              <Slider
+                                 value={filters.priceRange}
+                                 min={0}
+                                 max={maxPrice}
+                                 step={10}
+                                 onValueChange={(value) => setFilters((prev) => ({ ...prev, priceRange: value as [number, number] }))}
+                                 className="py-2"
+                              />
+                           </div>
+                        </div>
+                     </PopoverContent>
+                  </Popover>
+               </div>
             </CardHeader>
             <CardContent>
                {isLoading ? (
@@ -315,7 +564,7 @@ export function ProductsPageClient() {
                      ))}
                   </div>
                ) : (
-                  <DataTable columns={columns} data={products} pageSize={10} />
+                  <DataTable columns={columns} data={filteredProducts} pageSize={10} />
                )}
             </CardContent>
          </Card>

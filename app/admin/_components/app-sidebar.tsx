@@ -61,8 +61,8 @@ const mainNavItems = [
   {
     title: "Products",
     icon: Package,
-    href: "/admin/products",
     items: [
+      { title: "All Products", href: "/admin/products" },
       { title: "Add New", href: "/admin/products/new" },
       { title: "Categories", href: "/admin/products/categories" },
       { title: "Inventory", href: "/admin/products/inventory" },
@@ -71,7 +71,6 @@ const mainNavItems = [
   {
     title: "Orders",
     icon: ShoppingCart,
-    href: "/admin/orders",
     items: [
       { title: "All Orders", href: "/admin/orders" },
       { title: "Pending", href: "/admin/orders?status=pending" },
@@ -136,21 +135,15 @@ export function AppSidebar() {
                 item.items ? (
                   <Collapsible
                     key={item.title}
-                    defaultOpen={pathname.startsWith(item.href)}
                     asChild
+                    className="group/collapsible"
                   >
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={pathname === item.href}
-                          className="group"
-                        >
-                          <Link href={item.href}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                          </Link>
+                        <SidebarMenuButton isActive={pathname === item.href}>
+                          {item.icon && <item.icon />}
+                          <span>{item.title}</span>
+                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>

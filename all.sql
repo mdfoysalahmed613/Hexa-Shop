@@ -29,6 +29,7 @@ CREATE TABLE products (
    DELETE
       CASCADE,
       created_at timestamptz DEFAULT now()
+      updated_at timestamptz DEFAULT now()
 );
 
 CREATE TABLE products_variants (

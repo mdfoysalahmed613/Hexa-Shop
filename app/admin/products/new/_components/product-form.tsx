@@ -18,7 +18,7 @@
  * - /admin/products/[id]/edit (edit mode)
  */
 
-import { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
+import { useRef, useMemo } from "react";
 import { useForm, Controller, useWatch, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X, ImagePlus, Loader2, Save, Plus, Trash2 } from "lucide-react";
@@ -61,17 +61,7 @@ import { useAddProduct, useUpdateProduct } from "@/hooks/use-products";
 import { type Product } from "@/lib/services/products";
 import { toast } from "sonner";
 
-export interface ProductFormHandle {
-   submit: () => void;
-   reset: () => void;
-}
-
-interface ProductFormProps {
-   product?: Product | null;
-}
-
-export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
-   function ProductForm({ product }, ref) {
+export function ProductForm({ product }: { product?: Product } ) {
       const router = useRouter();
       const isEditing = !!product;
       const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,7 +74,6 @@ export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
          control,
          handleSubmit,
          setValue,
-         reset,
          formState: { isSubmitting, errors },
       } = useForm<ProductFormData>({
          resolver: zodResolver(productFormSchema),
@@ -200,12 +189,6 @@ export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
             // Error is handled by the mutation
          }
       };
-
-      // Expose submit and reset methods to parent
-      useImperativeHandle(ref, () => ({
-         submit: () => handleSubmit(onSubmit)(),
-         reset: () => reset(defaultProductFormValues),
-      }));
 
       const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
          const files = Array.from(e.target.files || []);
@@ -744,4 +727,4 @@ export const ProductForm = forwardRef<ProductFormHandle, ProductFormProps>(
          </form>
       );
    }
-);
+
