@@ -23,6 +23,8 @@ export const variantFormSchema = z.object({
     .max(200, "Variant name too long")
     .optional()
     .nullable(),
+  // Attributes as key-value pairs (e.g., { "Size": "XL", "Color": "Red" })
+  attributes: z.record(z.string(), z.string()).optional(),
 });
 
 export type VariantFormData = z.infer<typeof variantFormSchema>;
@@ -100,6 +102,7 @@ export const defaultVariant: VariantFormData = {
   stock: 0,
   is_active: true,
   variant_name: null,
+  attributes: {},
 };
 
 export const defaultProductFormValues: ProductFormData = {

@@ -45,6 +45,7 @@ CREATE TABLE products_variants (
       stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
       is_active BOOLEAN NOT NULL DEFAULT TRUE,
       variant_name text,
+      attributes JSONB NOT NULL DEFAULT '{}',
       created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -62,24 +63,6 @@ CREATE TABLE product_images (
 -- ============================================================================
 -- ORDERS
 -- ============================================================================
--- Order status enum type
-CREATE TYPE order_status AS ENUM (
-   'pending',
-   'confirmed',
-   'processing',
-   'shipped',
-   'delivered',
-   'cancelled',
-   'refunded'
-);
-
--- Payment status enum type
-CREATE TYPE payment_status AS ENUM (
-   'pending',
-   'paid',
-   'failed',
-   'refunded'
-);
 
 -- Main orders table
 CREATE TABLE orders (
@@ -178,32 +161,6 @@ CREATE INDEX idx_order_status_history_order_id ON order_status_history(order_id)
 -- ============================================================================
 -- TRIGGERS
 -- ============================================================================
--- Function to update updated_at timestamp
-CREATE
-OR REPLACE FUNCTION update_updated_at_column() RETURNS TRIGGER AS $$ BEGIN
-   NEW .updated_at = now();
-
-RETURN NEW;
-
-END;
-
-$$ LANGUAGE 'plpgsql';
-
--- Trigger for orders updated_at
-CREATE TRIGGER update_orders_updated_at BEFORE
-UPDATE
-   ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Function to generate order number
-CREATE
-OR REPLACE FUNCTION generate_order_number() RETURNS TRIGGER AS $$
-DECLARE
-   year_month text;
-
-sequence_num INTEGER;
-
-BEGIN
-   year_month := to_char(now(), 'YYMM');
 
 -- Get the next sequence number for this month
 SELECT
@@ -240,7 +197,8 @@ INSERT
 
 -- Function to log order status changes
 CREATE
-OR REPLACE FUNCTION log_order_status_change() RETURNS TRIGGER AS $$ BEGIN
+OR REPLACE FUNCTION log_order_status_change() RETURNS TRIGGER AS $$ 
+BEGIN
    IF OLD .status IS DISTINCT
    FROM
       NEW .status THEN
@@ -262,145 +220,3 @@ CREATE TRIGGER log_order_status_change_trigger AFTER
 UPDATE
    ON orders FOR EACH ROW EXECUTE FUNCTION log_order_status_change();
 
--- ============================================================================
--- ROW LEVEL SECURITY (RLS)
--- ============================================================================
--- Enable RLS on all tables
-ALTER TABLE
-   categories ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE
-   products ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE
-   products_variants ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE
-   product_images ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE
-   orders ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE
-   order_items ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE
-   order_status_history ENABLE ROW LEVEL SECURITY;
-
--- Categories: Public read, admin write
-CREATE POLICY "Categories are viewable by everyone" ON categories FOR
-SELECT
-   USING (TRUE);
-
-CREATE POLICY "Categories are editable by admins" ON categories FOR ALL USING (
-   auth.jwt() ->> 'role' = 'admin'
-   OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-   OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'demo_admin'
-);
-
--- Products: Public read, admin write
-CREATE POLICY "Products are viewable by everyone" ON products FOR
-SELECT
-   USING (TRUE);
-
-CREATE POLICY "Products are editable by admins" ON products FOR ALL USING (
-   auth.jwt() ->> 'role' = 'admin'
-   OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-   OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'demo_admin'
-);
-
--- Product variants: Public read, admin write
-CREATE POLICY "Product variants are viewable by everyone" ON products_variants FOR
-SELECT
-   USING (TRUE);
-
-CREATE POLICY "Product variants are editable by admins" ON products_variants FOR ALL USING (
-   auth.jwt() ->> 'role' = 'admin'
-   OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-   OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'demo_admin'
-);
-
--- Product images: Public read, admin write
-CREATE POLICY "Product images are viewable by everyone" ON product_images FOR
-SELECT
-   USING (TRUE);
-
-CREATE POLICY "Product images are editable by admins" ON product_images FOR ALL USING (
-   auth.jwt() ->> 'role' = 'admin'
-   OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-   OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'demo_admin'
-);
-
--- Orders: Users can view their own orders, admins can view all
-CREATE POLICY "Users can view their own orders" ON orders FOR
-SELECT
-   USING (
-      auth.uid() = user_id
-      OR auth.jwt() ->> 'role' = 'admin'
-      OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-      OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'demo_admin'
-   );
-
-CREATE POLICY "Users can create orders" ON orders FOR
-INSERT
-   WITH CHECK (TRUE);
-
-CREATE POLICY "Admins can update orders" ON orders FOR
-UPDATE
-   USING (
-      auth.jwt() ->> 'role' = 'admin'
-      OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-      OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'demo_admin'
-   );
-
--- Order items: Same as orders
-CREATE POLICY "Users can view their own order items" ON order_items FOR
-SELECT
-   USING (
-      EXISTS (
-         SELECT
-            1
-         FROM
-            orders
-         WHERE
-            orders.id = order_items.order_id
-            AND (
-               orders.user_id = auth.uid()
-               OR auth.jwt() ->> 'role' = 'admin'
-               OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-               OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'demo_admin'
-            )
-      )
-   );
-
-CREATE POLICY "Order items are insertable during checkout" ON order_items FOR
-INSERT
-   WITH CHECK (TRUE);
-
--- Order status history: Same as orders
-CREATE POLICY "Order status history viewable by order owner or admin" ON order_status_history FOR
-SELECT
-   USING (
-      EXISTS (
-         SELECT
-            1
-         FROM
-            orders
-         WHERE
-            orders.id = order_status_history.order_id
-            AND (
-               orders.user_id = auth.uid()
-               OR auth.jwt() ->> 'role' = 'admin'
-               OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-               OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'demo_admin'
-            )
-      )
-   );
-
-CREATE POLICY "Status history insertable by admins" ON order_status_history FOR
-INSERT
-   WITH CHECK (
-      auth.jwt() ->> 'role' = 'admin'
-      OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-      OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'demo_admin'
-   );

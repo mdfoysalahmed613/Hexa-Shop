@@ -10,5 +10,4 @@ When reviewing the code changes, please consider the following:
 3. Suggest improvements or optimizations where applicable.
 
 
-I removed is_active column in products table, So i want to store active or inactive is variant not whole 
-
+In product add form i dont want a toggle switch for is active field, instead i want a variant name field in this area. So please make the necessary changes to replace the toggle switch with a variant name input field.

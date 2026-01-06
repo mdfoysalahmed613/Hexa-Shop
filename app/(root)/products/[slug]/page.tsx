@@ -275,6 +275,24 @@ export default function ProductPage({ params }: ProductPageProps) {
                         />
                      </div>
                   )}
+
+                  {/* Attributes */}
+                  {selectedVariant && Object.keys(selectedVariant.attributes || {}).length > 0 && (
+                     <>
+                        <Separator />
+                        <div className="space-y-3">
+                           <h3 className="font-medium">Product Details</h3>
+                           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                              {Object.entries(selectedVariant.attributes).map(([key, value]) => (
+                                 <div key={key} className="contents">
+                                    <dt className="text-muted-foreground">{key}</dt>
+                                    <dd className="font-medium">{value}</dd>
+                                 </div>
+                              ))}
+                           </dl>
+                        </div>
+                     </>
+                  )}
                </div>
             </div>
          </div>

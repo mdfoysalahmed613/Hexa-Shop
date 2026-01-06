@@ -1,4 +1,4 @@
-export { ProductForm, type ProductFormHandle } from "./product-form";
+export { ProductForm } from "./product-form";
 export {
   productFormSchema,
   variantFormSchema,
