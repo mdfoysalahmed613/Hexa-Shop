@@ -74,7 +74,7 @@ CREATE TABLE orders (
    customer_name text NOT NULL,
    customer_phone text,
    -- Shipping address
-   shipping_address_line1 text NOT NULL,
+   shipping_address_line text NOT NULL,
    shipping_city text NOT NULL,
    shipping_postal_code text NOT NULL,
    shipping_country text NOT NULL DEFAULT 'BD',

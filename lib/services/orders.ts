@@ -42,7 +42,7 @@ export interface Order {
   customer_phone: string | null;
 
   // Shipping address
-  shipping_address_line1: string;
+  shipping_address_line: string;
   shipping_city: string;
   shipping_postal_code: string;
   shipping_country: string;
@@ -89,7 +89,7 @@ export interface CheckoutInput {
   customer_name: string;
   customer_phone?: string;
 
-  shipping_address_line1: string;
+  shipping_address_line: string;
   shipping_city: string;
   shipping_postal_code: string;
   shipping_country?: string;
@@ -158,7 +158,7 @@ export async function createOrder(
         customer_email: input.customer_email,
         customer_name: input.customer_name,
         customer_phone: input.customer_phone || null,
-        shipping_address_line1: input.shipping_address_line1,
+        shipping_address_line: input.shipping_address_line,
         shipping_city: input.shipping_city,
         shipping_postal_code: input.shipping_postal_code,
         shipping_country: input.shipping_country || "BD",

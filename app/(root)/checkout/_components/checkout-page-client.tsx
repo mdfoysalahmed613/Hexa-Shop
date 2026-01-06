@@ -52,7 +52,7 @@ const checkoutSchema = z.object({
    customer_name: z.string().min(1, "Name is required"),
    customer_email: z.string().email("Valid email is required"),
    customer_phone: z.string().optional(),
-   shipping_address_line1: z.string().min(1, "Address is required"),
+   shipping_address_line: z.string().min(1, "Address is required"),
    shipping_city: z.string().min(1, "City is required"),
    shipping_postal_code: z.string().min(1, "Postal code is required"),
    shipping_country: z.string().min(1, "Country is required"),
@@ -82,7 +82,7 @@ export function CheckoutPageClient() {
          customer_name: user?.user_metadata?.full_name || "",
          customer_email: user?.email || "",
          customer_phone: "",
-         shipping_address_line1: "",
+         shipping_address_line: "",
          shipping_city: "",
          shipping_postal_code: "",
          shipping_country: "BD",
@@ -269,14 +269,14 @@ export function CheckoutPageClient() {
                      <CardContent className="space-y-4">
                         <Controller
                            control={control}
-                           name="shipping_address_line1"
+                           name="shipping_address_line"
                            render={({ field, fieldState }) => (
                               <Field data-invalid={fieldState.invalid}>
-                                 <FieldLabel htmlFor="shipping_address_line1">
+                                 <FieldLabel htmlFor="shipping_address_line">
                                     Street Address <span className="text-destructive">*</span>
                                  </FieldLabel>
                                  <Input
-                                    id="shipping_address_line1"
+                                    id="shipping_address_line"
                                     placeholder="123 Main Street, Apt 4B"
                                     {...field}
                                     aria-invalid={fieldState.invalid}

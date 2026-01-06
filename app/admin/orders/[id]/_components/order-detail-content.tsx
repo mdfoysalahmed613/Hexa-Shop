@@ -316,7 +316,7 @@ export function OrderDetailContent() {
                      </CardTitle>
                   </CardHeader>
                   <CardContent className="text-sm">
-                     <p>{order.shipping_address_line1}</p>
+                     <p>{order.shipping_address_line}</p>
                      <p>
                         {order.shipping_city}, {order.shipping_postal_code}
                      </p>

@@ -43,7 +43,7 @@ const checkoutSchema = z.object({
    customer_name: z.string().min(1, "Name is required"),
    customer_email: z.string().email("Valid email is required"),
    customer_phone: z.string().optional(),
-   shipping_address_line1: z.string().min(1, "Address is required"),
+   shipping_address_line: z.string().min(1, "Address is required"),
    shipping_address_line2: z.string().optional(),
    shipping_city: z.string().min(1, "City is required"),
    shipping_state: z.string().min(1, "State is required"),
@@ -80,7 +80,7 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
          customer_name: user?.user_metadata?.full_name || "",
          customer_email: user?.email || "",
          customer_phone: "",
-         shipping_address_line1: "",
+         shipping_address_line: "",
          shipping_address_line2: "",
          shipping_city: "",
          shipping_state: "",
@@ -250,14 +250,14 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
                   <h3 className="font-medium">Shipping Address</h3>
                   <Controller
                      control={control}
-                     name="shipping_address_line1"
+                     name="shipping_address_line"
                      render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                           <FieldLabel htmlFor="shipping_address_line1">
+                           <FieldLabel htmlFor="shipping_address_line">
                               Address Line 1 <span className="text-destructive">*</span>
                            </FieldLabel>
                            <Input
-                              id="shipping_address_line1"
+                              id="shipping_address_line"
                               placeholder="123 Main Street"
                               {...field}
                               aria-invalid={fieldState.invalid}
