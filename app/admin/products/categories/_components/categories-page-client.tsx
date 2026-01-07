@@ -21,13 +21,13 @@ import {
   Package,
   Eye,
   EyeOff,
-  SearchIcon,
+  Search,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Input } from "@/components/ui/input";
 import { StatsCards, type StatItem } from "@/components/shared/stats-cards";
 import { useCategories } from "@/hooks/use-categories";
 import { type Category } from "@/lib/services/categories";
@@ -164,33 +164,29 @@ export function CategoriesPageClient() {
         {/* Stats Cards */}
         <StatsCards stats={stats} isLoading={isLoading} />
 
-        {/* Search Card */}
+        {/* Categories List Card */}
         <Card>
-          <CardContent>
-            <InputGroup>
-              <InputGroupAddon>
-                <SearchIcon className="h-4 w-4" />
-              </InputGroupAddon>
-              <InputGroupInput
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <div>
+              <CardTitle className="text-base">All Categories</CardTitle>
+              {isLoading ? (
+                <Skeleton className="h-4 w-24 mt-1" />
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  {hierarchicalCategories.length} categories found
+                </span>
+              )}
+            </div>
+            {/* Search */}
+            <div className="relative w-72">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search categories..."
+                className="pl-9"
               />
-            </InputGroup>
-          </CardContent>
-        </Card>
-
-        {/* Categories List Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">All Categories</CardTitle>
-            {isLoading ? (
-              <Skeleton className="h-4 w-24" />
-            ) : (
-              <span className="text-sm text-muted-foreground">
-                {hierarchicalCategories.length} categories found
-              </span>
-            )}
+            </div>
           </CardHeader>
 
           <CardContent>
