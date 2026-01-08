@@ -3,7 +3,7 @@
 import { useState, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import {
    ChevronLeft,
    Minus,
@@ -11,6 +11,7 @@ import {
    Plus,
    ShoppingCart,
    Check,
+   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ export default function ProductPage({ params }: ProductPageProps) {
    const { slug } = use(params);
    const { data: product, isLoading, error } = useProductBySlug(slug);
    const { addItem, getItemQuantity } = useCart();
+   const router = useRouter();
 
    const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
    const [quantity, setQuantity] = useState(1);
@@ -67,6 +69,18 @@ export default function ProductPage({ params }: ProductPageProps) {
       addItem(product, selectedVariant, quantity);
       toast.success(`${product.name} added to cart!`);
       setQuantity(1);
+   };
+
+   const handleBuyNow = () => {
+      if (!selectedVariant || isOutOfStock) return;
+
+      if (quantity > availableStock) {
+         toast.error(`Only ${availableStock} items available`);
+         return;
+      }
+
+      addItem(product, selectedVariant, quantity);
+      router.push("/checkout");
    };
 
    const handleQuantityChange = (delta: number) => {
@@ -255,6 +269,16 @@ export default function ProductPage({ params }: ProductPageProps) {
                         <ShoppingCart className="mr-2 h-5 w-5" />
                         {isOutOfStock ? "Out of Stock" : "Add to Cart"}
                      </Button>
+                     <Button
+                        size="lg"
+                        variant="secondary"
+                        className="flex-1"
+                        disabled={isOutOfStock}
+                        onClick={handleBuyNow}
+                     >
+                        <Zap className="mr-2 h-5 w-5" />
+                        Buy Now
+                     </Button>
                   </div>
 
                   {cartQuantity > 0 && (
@@ -276,19 +300,25 @@ export default function ProductPage({ params }: ProductPageProps) {
                      </div>
                   )}
 
-                  {/* Attributes */}
-                  {selectedVariant && Object.keys(selectedVariant.attributes || {}).length > 0 && (
+                  {/* Product Details */}
+                  {selectedVariant && (selectedVariant.size || selectedVariant.color) && (
                      <>
                         <Separator />
                         <div className="space-y-3">
                            <h3 className="font-medium">Product Details</h3>
                            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                              {Object.entries(selectedVariant.attributes).map(([key, value]) => (
-                                 <div key={key} className="contents">
-                                    <dt className="text-muted-foreground">{key}</dt>
-                                    <dd className="font-medium">{value}</dd>
+                              {selectedVariant.size && (
+                                 <div className="contents">
+                                    <dt className="text-muted-foreground">Size</dt>
+                                    <dd className="font-medium">{selectedVariant.size}</dd>
                                  </div>
-                              ))}
+                              )}
+                              {selectedVariant.color && (
+                                 <div className="contents">
+                                    <dt className="text-muted-foreground">Color</dt>
+                                    <dd className="font-medium">{selectedVariant.color}</dd>
+                                 </div>
+                              )}
                            </dl>
                         </div>
                      </>
@@ -311,7 +341,9 @@ function VariantButton({
    onClick: () => void;
 }) {
    const isOutOfStock = variant.stock === 0;
-   const label = variant.variant_name || `$${variant.price.toFixed(2)}`;
+   // Build label from size/color or fall back to price
+   const parts = [variant.size, variant.color].filter(Boolean);
+   const label = parts.length > 0 ? parts.join(" / ") : `$${variant.price.toFixed(2)}`;
 
    return (
       <button

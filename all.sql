@@ -20,94 +20,140 @@ CREATE TABLE categories (
 -- ============================================================================
 -- PRODUCTS
 -- ============================================================================
-CREATE TABLE products (
-   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-   NAME text NOT NULL,
-   slug text UNIQUE NOT NULL,
-   description text,
-   category_id uuid NOT NULL REFERENCES categories(id) ON
-   DELETE
-      CASCADE,
-      created_at timestamptz DEFAULT now()
-      updated_at timestamptz DEFAULT now()
-);
+create table public.products (
+  id uuid not null default gen_random_uuid (),
+  name text not null,
+  slug text not null,
+  description text null,
+  category_id uuid not null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  is_active boolean not null default true,
+  constraint products_pkey primary key (id),
+  constraint products_slug_key unique (slug),
+  constraint products_category_id_fkey foreign KEY (category_id) references categories (id) on delete CASCADE
+) TABLESPACE pg_default;
 
-CREATE TABLE products_variants (
-   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-   product_id uuid NOT NULL REFERENCES products(id) ON
-   DELETE
-      CASCADE,
-      price numeric(10, 2) NOT NULL CHECK (price >= 0),
-      compare_price numeric(10, 2) CHECK (
-         compare_price IS NULL
-         OR compare_price >= price
-      ),
-      stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
-      is_active BOOLEAN NOT NULL DEFAULT TRUE,
-      variant_name text,
-      attributes JSONB NOT NULL DEFAULT '{}',
-      created_at timestamptz NOT NULL DEFAULT now()
-);
+create trigger products_slug BEFORE INSERT
+or
+update on products for EACH row
+execute FUNCTION generate_slug ();
 
-CREATE TABLE product_images (
-   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-   product_id uuid NOT NULL REFERENCES products(id) ON
+-- ============================================================================
+-- PRODUCT VARIANTS
+-- ============================================================================
+
+CREATE TABLE PUBLIC .product_variants (
+   id uuid NOT NULL DEFAULT gen_random_uuid (),
+   product_id uuid NOT NULL,
+   price numeric(10, 2) NOT NULL,
+   compare_price numeric(10, 2) NULL,
+   stock INTEGER NOT NULL DEFAULT 0,
+   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+   SIZE text NULL,
+   color text NULL,
+   sku text NOT NULL,
+   constraint products_variants_pkey primary key (id),
+   constraint product_variants_sku_key UNIQUE (sku),
+   constraint products_variants_product_id_fkey foreign KEY (product_id) references products (id) ON
    DELETE
       CASCADE,
-      image_url text NOT NULL,
-      is_primary BOOLEAN NOT NULL DEFAULT FALSE,
-      display_order INTEGER DEFAULT 0,
-      created_at timestamptz DEFAULT now()
-);
+      constraint products_variants_stock_check CHECK ((stock >= 0)),
+      constraint products_variants_price_check CHECK ((price >= (0) :: numeric)),
+      constraint products_variants_check CHECK ((compare_price >= price)),
+      constraint products_variants_size_check CHECK (
+         (
+            SIZE = ANY (
+               ARRAY [ 'S' :: text,
+               'M' :: text,
+               'L' :: text,
+               'XL' :: text,
+               'XXL' :: text ]
+            )
+         )
+      )
+) TABLESPACE pg_default;
 
 -- ============================================================================
 -- ORDERS
 -- ============================================================================
 
 -- Main orders table
-CREATE TABLE orders (
-   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-   order_number text UNIQUE NOT NULL,
-   user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
-   -- Customer info (stored for order history even if user is deleted)
-   customer_email text NOT NULL,
-   customer_name text NOT NULL,
-   customer_phone text,
-   -- Shipping address
-   shipping_address_line text NOT NULL,
-   shipping_city text NOT NULL,
-   shipping_postal_code text NOT NULL,
-   shipping_country text NOT NULL DEFAULT 'BD',
-   -- Order totals
-   subtotal numeric(10, 2) NOT NULL CHECK (subtotal >= 0),
-   shipping_cost numeric(10, 2) NOT NULL DEFAULT 0 CHECK (shipping_cost >= 0),
-   discount_amount numeric(10, 2) NOT NULL DEFAULT 0 CHECK (discount_amount >= 0),
-   total numeric(10, 2) NOT NULL CHECK (total >= 0),
-   -- Status
-   order_status text not null CHECK (order_status IN ('processing', 'delivered', 'cancelled')),
-   payment_status text not null CHECK (payment_status IN ('paid', 'unpaid')),
-   -- Notes
-   customer_notes text,
-   -- Timestamps
-   created_at timestamptz NOT NULL DEFAULT now(),
-   updated_at timestamptz NOT NULL DEFAULT now(),
-);
+create table public.orders (
+  id uuid not null default gen_random_uuid (),
+  order_number text not null,
+  user_id uuid not null,
+  customer_email text not null,
+  customer_name text not null,
+  customer_phone text not null,
+  shipping_address_line text not null,
+  shipping_city text not null,
+  shipping_postal_code text not null,
+  shipping_country text not null default 'BD'::text,
+  subtotal numeric(10, 2) not null,
+  shipping_cost numeric(10, 2) not null default 0,
+  discount_amount numeric(10, 2) not null default 0,
+  order_status text not null,
+  payment_status text not null,
+  customer_notes text null,
+  created_at timestamp with time zone not null default now(),
+  total numeric(10, 2) not null,
+  constraint orders_pkey primary key (id),
+  constraint orders_order_number_key unique (order_number),
+  constraint orders_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint orders_discount_amount_check check ((discount_amount >= (0)::numeric)),
+  constraint orders_subtotal_check check ((subtotal >= (0)::numeric)),
+  constraint orders_total_check check ((total > (0)::numeric)),
+  constraint orders_total_math_check check (
+    (
+      total = ((subtotal + shipping_cost) - discount_amount)
+    )
+  ),
+  constraint orders_shipping_coast_check check ((shipping_cost >= (0)::numeric)),
+  constraint orders_order_status_check check (
+    (
+      order_status = any (
+        array[
+          'pending'::text,
+          'processing'::text,
+          'shipped'::text,
+          'delivered'::text,
+          'cancelled'::text
+        ]
+      )
+    )
+  ),
+  constraint orders_payment_status_check check (
+    (
+      payment_status = any (
+        array['unpaid'::text, 'pending'::text, 'paid'::text]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create trigger orders_set_order_number BEFORE INSERT on orders for EACH row
+execute FUNCTION set_order_number ();
+
 
 -- Order items table
-CREATE TABLE order_items (
-   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-   order_id uuid NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-   variant_id uuid REFERENCES products_variants(id) ON DELETE SET NULL,
-   -- Snapshot of product data at time of order
-   product_name text NOT NULL,
-   variant_name text,
-   product_image_url text,
-   -- Pricing
-   unit_price numeric(10, 2) NOT NULL CHECK (unit_price >= 0),
-   quantity INTEGER NOT NULL CHECK (quantity > 0),
-   total_price numeric(10, 2) NOT NULL ,
-   created_at timestamptz NOT NULL DEFAULT now()
-);
+create table public.order_items (
+  id uuid not null default gen_random_uuid (),
+  order_id uuid not null,
+  variant_id uuid null,
+  product_name text not null,
+  unit_price numeric(10, 2) not null,
+  quantity integer not null,
+  total_price numeric(10, 2) not null,
+  created_at timestamp with time zone not null default now(),
+  product_image_url text null,
+  constraint order_items_pkey primary key (id),
+  constraint order_items_order_id_fkey foreign KEY (order_id) references orders (id) on delete CASCADE,
+  constraint order_items_variant_id_fkey foreign KEY (variant_id) references products_variants (id) on delete set null,
+  constraint order_items_quantity_check check ((quantity > 0)),
+  constraint order_items_unit_price_check check ((unit_price >= (0)::numeric))
+) TABLESPACE pg_default;
 -- ============================================================================
 -- INDEXES
 -- ============================================================================

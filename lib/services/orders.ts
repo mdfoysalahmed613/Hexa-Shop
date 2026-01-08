@@ -27,9 +27,14 @@ import { hasAdminAccess, isAdmin } from "@/lib/auth/roles";
 // Types
 // ============================================================================
 
-export type OrderStatus = "processing" | "delivered" | "cancelled";
+export type OrderStatus =
+  | "pending"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
 
-export type PaymentStatus = "paid" | "unpaid";
+export type PaymentStatus = "unpaid" | "pending" | "paid";
 
 export interface Order {
   id: string;
@@ -62,7 +67,6 @@ export interface Order {
 
   // Timestamps
   created_at: string;
-  updated_at: string;
 
   // Relations
   items?: OrderItem[];
@@ -74,7 +78,6 @@ export interface OrderItem {
   variant_id: string | null;
 
   product_name: string;
-  variant_name: string | null;
   product_image_url: string | null;
 
   unit_price: number;
@@ -99,7 +102,6 @@ export interface CheckoutInput {
   items: {
     variant_id: string;
     product_name: string;
-    variant_name: string | null;
     product_image_url: string | null;
     unit_price: number;
     quantity: number;
@@ -167,7 +169,7 @@ export async function createOrder(
         discount_amount,
         total,
         customer_notes: input.customer_notes || null,
-        order_status: "processing",
+        order_status: "pending",
         payment_status: "unpaid",
       })
       .select()
@@ -183,7 +185,6 @@ export async function createOrder(
       order_id: order.id,
       variant_id: item.variant_id,
       product_name: item.product_name,
-      variant_name: item.variant_name,
       product_image_url: item.product_image_url,
       unit_price: item.unit_price,
       quantity: item.quantity,
@@ -357,6 +358,8 @@ export async function getOrder(id: string): Promise<GetOrderResult> {
 
 /**
  * Update order status (admin only)
+ * Note: When changing to "cancelled", stock is restored for all items.
+ * Stock was already decremented when order was created.
  */
 export async function updateOrderStatus(
   id: string,
@@ -373,6 +376,68 @@ export async function updateOrderStatus(
       return { ok: false, error: "Admin access required" };
     }
 
+    // Get current order to check status transition
+    const { data: currentOrder, error: fetchError } = await supabase
+      .from("orders")
+      .select(
+        `
+        *,
+        items:order_items(*)
+      `
+      )
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !currentOrder) {
+      console.error("Fetch order error:", fetchError);
+      return { ok: false, error: "Order not found" };
+    }
+
+    const previousStatus = currentOrder.order_status;
+
+    // If cancelling an order that wasn't previously cancelled, restore stock
+    if (order_status === "cancelled" && previousStatus !== "cancelled") {
+      for (const item of currentOrder.items || []) {
+        if (item.variant_id) {
+          // Get current stock and add back the quantity
+          const { data: variant } = await supabase
+            .from("product_variants")
+            .select("stock")
+            .eq("id", item.variant_id)
+            .single();
+
+          if (variant) {
+            await supabase
+              .from("product_variants")
+              .update({ stock: variant.stock + item.quantity })
+              .eq("id", item.variant_id);
+          }
+        }
+      }
+    }
+
+    // If un-cancelling an order (changing from cancelled to another status), decrement stock
+    if (previousStatus === "cancelled" && order_status !== "cancelled") {
+      for (const item of currentOrder.items || []) {
+        if (item.variant_id) {
+          // Get current stock and subtract the quantity
+          const { data: variant } = await supabase
+            .from("product_variants")
+            .select("stock")
+            .eq("id", item.variant_id)
+            .single();
+
+          if (variant) {
+            const newStock = Math.max(0, variant.stock - item.quantity);
+            await supabase
+              .from("product_variants")
+              .update({ stock: newStock })
+              .eq("id", item.variant_id);
+          }
+        }
+      }
+    }
+
     const { error } = await supabase
       .from("orders")
       .update({ order_status })
@@ -385,6 +450,7 @@ export async function updateOrderStatus(
 
     revalidatePath("/admin/orders");
     revalidatePath(`/admin/orders/${id}`);
+    revalidatePath("/admin/products");
 
     return { ok: true };
   } catch (e) {
@@ -581,7 +647,9 @@ export async function deleteOrder(id: string): Promise<ActionResult> {
 
 export interface OrderStats {
   total_orders: number;
+  pending_orders: number;
   processing_orders: number;
+  shipped_orders: number;
   delivered_orders: number;
   cancelled_orders: number;
   total_revenue: number;
@@ -623,8 +691,12 @@ export async function getOrderStats(): Promise<{
 
     const stats: OrderStats = {
       total_orders: orders?.length || 0,
+      pending_orders:
+        orders?.filter((o) => o.order_status === "pending").length || 0,
       processing_orders:
         orders?.filter((o) => o.order_status === "processing").length || 0,
+      shipped_orders:
+        orders?.filter((o) => o.order_status === "shipped").length || 0,
       delivered_orders:
         orders?.filter((o) => o.order_status === "delivered").length || 0,
       cancelled_orders:

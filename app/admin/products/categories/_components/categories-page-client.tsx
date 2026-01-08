@@ -26,7 +26,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatsCards, type StatItem } from "@/components/shared/stats-cards";
 import { useCategories } from "@/hooks/use-categories";
 import { type Category } from "@/lib/services/categories";
@@ -163,9 +163,9 @@ export function CategoriesPageClient() {
 
         {/* Stats Cards */}
         <StatsCards stats={stats} isLoading={isLoading} />
-          <h1 className="text-lg font-semibold ">
-            All Categories ({hierarchicalCategories.length})
-          </h1>
+        <h1 className="text-lg font-semibold ">
+          All Categories ({hierarchicalCategories.length})
+        </h1>
         {/* Categories List Card */}
         <Card>
           <CardHeader>

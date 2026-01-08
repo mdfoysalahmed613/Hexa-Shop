@@ -54,10 +54,12 @@ function getStatusVariant(
    switch (status) {
       case "delivered":
          return "default";
+      case "shipped":
       case "processing":
          return "secondary";
       case "cancelled":
          return "destructive";
+      case "pending":
       default:
          return "outline";
    }
@@ -69,6 +71,8 @@ function getPaymentStatusVariant(
    switch (status) {
       case "paid":
          return "default";
+      case "pending":
+         return "secondary";
       case "unpaid":
          return "outline";
       default:
@@ -215,11 +219,6 @@ export function OrderDetailContent() {
                                        </div>
                                        <div>
                                           <p className="font-medium">{item.product_name}</p>
-                                          {item.variant_name && (
-                                             <p className="text-sm text-muted-foreground">
-                                                {item.variant_name}
-                                             </p>
-                                          )}
                                        </div>
                                     </div>
                                  </TableCell>
@@ -347,7 +346,9 @@ export function OrderDetailContent() {
                                  <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
+                                 <SelectItem value="pending">Pending</SelectItem>
                                  <SelectItem value="processing">Processing</SelectItem>
+                                 <SelectItem value="shipped">Shipped</SelectItem>
                                  <SelectItem value="delivered">Delivered</SelectItem>
                                  <SelectItem value="cancelled">Cancelled</SelectItem>
                               </SelectContent>
@@ -384,6 +385,7 @@ export function OrderDetailContent() {
                               </SelectTrigger>
                               <SelectContent>
                                  <SelectItem value="unpaid">Unpaid</SelectItem>
+                                 <SelectItem value="pending">Pending</SelectItem>
                                  <SelectItem value="paid">Paid</SelectItem>
                               </SelectContent>
                            </Select>

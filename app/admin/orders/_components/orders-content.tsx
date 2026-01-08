@@ -31,6 +31,7 @@ import {
    Search,
    MoreHorizontal,
    Trash2,
+   ArrowUpDown,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,11 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 
 function getStatusIcon(status: OrderStatus) {
    switch (status) {
+      case "pending":
+         return <Clock className="h-4 w-4" />;
       case "processing":
+         return <Package className="h-4 w-4" />;
+      case "shipped":
          return <Package className="h-4 w-4" />;
       case "delivered":
          return <CheckCircle className="h-4 w-4" />;
@@ -84,8 +89,11 @@ function getStatusVariant(
    switch (status) {
       case "delivered":
          return "success";
+      case "pending":
       case "processing":
          return "warning";
+      case "shipped":
+         return "secondary";
       case "cancelled":
          return "destructive";
       default:
@@ -99,6 +107,8 @@ function getPaymentStatusVariant(
    switch (status) {
       case "paid":
          return "default";
+      case "pending":
+         return "secondary";
       case "unpaid":
          return "outline";
       default:
@@ -257,7 +267,16 @@ export function OrdersContent() {
          },
          {
             accessorKey: "order_status",
-            header: "Status",
+            header: ({ column }) => (
+               <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                  className="-ml-4"
+               >
+                  Status
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+               </Button>
+            ),
             cell: ({ row }) => (
                <Badge variant={getStatusVariant(row.original.order_status)}>
                   {row.original.order_status}
@@ -266,7 +285,16 @@ export function OrdersContent() {
          },
          {
             accessorKey: "payment_status",
-            header: "Payment",
+            header: ({ column }) => (
+               <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                  className="-ml-4"
+               >
+                  Payment
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+               </Button>
+            ),
             cell: ({ row }) => (
                <Badge variant={getPaymentStatusVariant(row.original.payment_status)}>
                   {row.original.payment_status}
@@ -275,7 +303,16 @@ export function OrdersContent() {
          },
          {
             accessorKey: "total",
-            header: "Total",
+            header: ({ column }) => (
+               <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                  className="-ml-4"
+               >
+                  Total
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+               </Button>
+            ),
             cell: ({ row }) => (
                <span className="font-medium text-right">
                   ${row.original.total.toFixed(2)}
@@ -284,7 +321,16 @@ export function OrdersContent() {
          },
          {
             accessorKey: "created_at",
-            header: "Date",
+            header: ({ column }) => (
+               <Button
+                  variant="ghost"
+                  onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                  className="-ml-4"
+               >
+                  Date
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+               </Button>
+            ),
             cell: ({ row }) =>
                format(new Date(row.original.created_at), "MMM d, yyyy"),
          },
@@ -312,11 +358,25 @@ export function OrdersContent() {
                         <DropdownMenuSeparator />
                         <DropdownMenuLabel>Update Status</DropdownMenuLabel>
                         <DropdownMenuItem
+                           onClick={() => updateOrderStatus.mutate({ id: order.id, order_status: "pending" })}
+                           disabled={order.order_status === "pending"}
+                        >
+                           <Clock className="mr-2 h-4 w-4" />
+                           Mark Pending
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                            onClick={() => updateOrderStatus.mutate({ id: order.id, order_status: "processing" })}
                            disabled={order.order_status === "processing"}
                         >
                            <Package className="mr-2 h-4 w-4" />
                            Mark Processing
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                           onClick={() => updateOrderStatus.mutate({ id: order.id, order_status: "shipped" })}
+                           disabled={order.order_status === "shipped"}
+                        >
+                           <Package className="mr-2 h-4 w-4" />
+                           Mark Shipped
                         </DropdownMenuItem>
                         <DropdownMenuItem
                            onClick={() => updateOrderStatus.mutate({ id: order.id, order_status: "delivered" })}
@@ -340,6 +400,13 @@ export function OrdersContent() {
                         >
                            <DollarSign className="mr-2 h-4 w-4" />
                            Mark Paid
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                           onClick={() => updatePaymentStatus.mutate({ id: order.id, payment_status: "pending" })}
+                           disabled={order.payment_status === "pending"}
+                        >
+                           <DollarSign className="mr-2 h-4 w-4" />
+                           Mark Payment Pending
                         </DropdownMenuItem>
                         <DropdownMenuItem
                            onClick={() => updatePaymentStatus.mutate({ id: order.id, payment_status: "unpaid" })}
@@ -394,7 +461,7 @@ export function OrdersContent() {
          </h1>
          {/* Orders Table */}
          <Card>
-            <CardContent className="pt-6">
+            <CardContent>
                {isLoading ? (
                   <div className="flex items-center justify-center py-8">
                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -449,9 +516,17 @@ export function OrdersContent() {
                                  </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent>
+                                 <DropdownMenuItem onClick={() => handleBulkStatusUpdate("pending")}>
+                                    <Clock className="mr-2 h-4 w-4" />
+                                    Mark Pending
+                                 </DropdownMenuItem>
                                  <DropdownMenuItem onClick={() => handleBulkStatusUpdate("processing")}>
                                     <Package className="mr-2 h-4 w-4" />
                                     Mark Processing
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem onClick={() => handleBulkStatusUpdate("shipped")}>
+                                    <Package className="mr-2 h-4 w-4" />
+                                    Mark Shipped
                                  </DropdownMenuItem>
                                  <DropdownMenuItem onClick={() => handleBulkStatusUpdate("delivered")}>
                                     <CheckCircle className="mr-2 h-4 w-4" />
@@ -473,6 +548,9 @@ export function OrdersContent() {
                               <DropdownMenuContent>
                                  <DropdownMenuItem onClick={() => handleBulkPaymentUpdate("paid")}>
                                     Mark Paid
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem onClick={() => handleBulkPaymentUpdate("pending")}>
+                                    Mark Pending
                                  </DropdownMenuItem>
                                  <DropdownMenuItem onClick={() => handleBulkPaymentUpdate("unpaid")}>
                                     Mark Unpaid

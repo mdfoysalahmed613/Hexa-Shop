@@ -1,8 +1,12 @@
 import { z } from "zod";
 
 // ============================================================================
-// Variant Schema (products_variants table)
+// Variant Schema (product_variants table)
 // ============================================================================
+
+// Valid size values matching database constraint
+export const VALID_SIZES = ["S", "M", "L", "XL", "XXL"] as const;
+export type ValidSize = (typeof VALID_SIZES)[number];
 
 export const variantFormSchema = z.object({
   id: z.string().optional(), // For editing existing variants
@@ -17,14 +21,12 @@ export const variantFormSchema = z.object({
     .int("Stock must be a whole number")
     .min(0, "Stock cannot be negative"),
   is_active: z.boolean(),
-  // Variant name (e.g., "Red / Large", "Blue / Small")
-  variant_name: z
-    .string()
-    .max(200, "Variant name too long")
-    .optional()
-    .nullable(),
-  // Attributes as key-value pairs (e.g., { "Size": "XL", "Color": "Red" })
-  attributes: z.record(z.string(), z.string()).optional(),
+  // SKU (optional - auto-generated if empty)
+  sku: z.string().max(100, "SKU too long").optional().nullable(),
+  // Size (optional - must be one of: S, M, L, XL, XXL)
+  size: z.enum(VALID_SIZES).optional().nullable(),
+  // Color (optional)
+  color: z.string().max(50, "Color too long").optional().nullable(),
 });
 
 export type VariantFormData = z.infer<typeof variantFormSchema>;
@@ -61,7 +63,7 @@ export const productFormSchema = z
     category_id: z.string().min(1, "Category is required"),
     is_active: z.boolean(),
 
-    // Variants (products_variants table)
+    // Variants (product_variants table)
     variants: z
       .array(variantFormSchema)
       .min(1, "At least one variant is required"),
@@ -101,8 +103,9 @@ export const defaultVariant: VariantFormData = {
   compare_price: null,
   stock: 0,
   is_active: true,
-  variant_name: null,
-  attributes: {},
+  sku: null,
+  size: null,
+  color: null,
 };
 
 export const defaultProductFormValues: ProductFormData = {

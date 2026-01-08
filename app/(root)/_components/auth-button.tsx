@@ -15,7 +15,7 @@
  */
 
 import Link from "next/link";
-import { Shield } from "lucide-react";
+import { Shield, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -88,6 +88,13 @@ export default function AuthButton() {
                      </Link>
                   </DropdownMenuItem>
                )}
+
+               <DropdownMenuItem asChild>
+                  <Link href="/orders">
+                     <ShoppingBag className="mr-2 h-4 w-4" />
+                     <span>My Orders</span>
+                  </Link>
+               </DropdownMenuItem>
 
                {/* Become Demo Admin - client component with server action */}
                {!hasAdminAccess(user) && <BecomeDemoAdminClient onBecomeDemoAdmin={becomeDemoAdmin} />}

@@ -95,16 +95,16 @@ export function CartSheet() {
                                        <h4 className="font-medium leading-tight line-clamp-1">
                                           {item.name}
                                        </h4>
-                                       {item.variantName && (
+                                       {(item.size || item.color) && (
                                           <p className="text-xs text-muted-foreground">
-                                             {item.variantName}
+                                             {[item.size, item.color].filter(Boolean).join(" / ")}
                                           </p>
                                        )}
                                     </div>
                                     <Button
                                        variant="ghost"
                                        size="icon"
-                                       className="h-8 w-8 -mr-2"
+                                       className="h-8 w-8 shrink-0"
                                        onClick={() => removeItem(item.id)}
                                     >
                                        <X className="h-4 w-4" />

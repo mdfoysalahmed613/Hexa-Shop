@@ -3,7 +3,7 @@
 /**
  * Product Variants Section
  *
- * Handles multiple product variants with pricing, stock, and attributes.
+ * Handles multiple product variants with pricing, stock, SKU, size and color.
  */
 
 import {
@@ -12,7 +12,7 @@ import {
    useFieldArray,
    FieldErrors,
 } from "react-hook-form";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,7 +28,14 @@ import {
    FieldError,
    FieldDescription,
 } from "@/components/ui/field";
-import { defaultVariant, type ProductFormData } from "./product-form-schema";
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from "@/components/ui/select";
+import { defaultVariant, VALID_SIZES, type ProductFormData } from "./product-form-schema";
 
 interface ProductVariantsProps {
    control: Control<ProductFormData>;
@@ -52,7 +59,7 @@ export function ProductVariants({ control, errors }: ProductVariantsProps) {
                <div>
                   <CardTitle>Product Variants</CardTitle>
                   <CardDescription>
-                     Add pricing, stock, and variant names for each option
+                     Add pricing, stock, and size/color options for each variant
                   </CardDescription>
                </div>
                <Button
@@ -163,7 +170,7 @@ export function ProductVariants({ control, errors }: ProductVariantsProps) {
                      />
                   </div>
 
-                  {/* Stock and Variant Name */}
+                  {/* Stock and SKU */}
                   <div className="grid grid-cols-2 gap-4">
                      <Controller
                         control={control}
@@ -199,15 +206,74 @@ export function ProductVariants({ control, errors }: ProductVariantsProps) {
 
                      <Controller
                         control={control}
-                        name={`variants.${index}.variant_name`}
+                        name={`variants.${index}.sku`}
                         render={({ field, fieldState }) => (
                            <Field data-invalid={fieldState.invalid}>
-                              <FieldLabel htmlFor={`variant_name-${index}`}>
-                                 Variant Name
+                              <FieldLabel htmlFor={`sku-${index}`}>
+                                 SKU
                               </FieldLabel>
                               <Input
-                                 id={`variant_name-${index}`}
-                                 placeholder="e.g. Red / Large"
+                                 id={`sku-${index}`}
+                                 placeholder="Auto-generated if empty"
+                                 {...field}
+                                 value={field.value ?? ""}
+                                 onChange={(e) => field.onChange(e.target.value || null)}
+                                 aria-invalid={fieldState.invalid}
+                              />
+                              <FieldDescription className="text-xs">
+                                 Optional - will be auto-generated if left empty
+                              </FieldDescription>
+                              {fieldState.invalid && (
+                                 <FieldError errors={[fieldState.error]} />
+                              )}
+                           </Field>
+                        )}
+                     />
+                  </div>
+
+                  {/* Size and Color */}
+                  <div className="grid grid-cols-2 gap-4">
+                     <Controller
+                        control={control}
+                        name={`variants.${index}.size`}
+                        render={({ field, fieldState }) => (
+                           <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel htmlFor={`size-${index}`}>
+                                 Size
+                              </FieldLabel>
+                              <Select
+                                 value={field.value ?? ""}
+                                 onValueChange={(value) => field.onChange(value || null)}
+                              >
+                                 <SelectTrigger id={`size-${index}`}>
+                                    <SelectValue placeholder="Select size (optional)" />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                    {VALID_SIZES.map((size) => (
+                                       <SelectItem key={size} value={size}>
+                                          {size}
+                                       </SelectItem>
+                                    ))}
+                                 </SelectContent>
+                              </Select>
+                              {fieldState.invalid && (
+                                 <FieldError errors={[fieldState.error]} />
+                              )}
+                           </Field>
+                        )}
+                     />
+
+                     <Controller
+                        control={control}
+                        name={`variants.${index}.color`}
+                        render={({ field, fieldState }) => (
+                           <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel htmlFor={`color-${index}`}>
+                                 Color
+                              </FieldLabel>
+                              <Input
+                                 id={`color-${index}`}
+                                 placeholder="e.g. Red, Blue, Black"
                                  {...field}
                                  value={field.value ?? ""}
                                  onChange={(e) => field.onChange(e.target.value || null)}
@@ -220,117 +286,9 @@ export function ProductVariants({ control, errors }: ProductVariantsProps) {
                         )}
                      />
                   </div>
-
-                  {/* Variant Attributes */}
-                  <Controller
-                     control={control}
-                     name={`variants.${index}.attributes`}
-                     render={({ field }) => (
-                        <AttributesEditor
-                           attributes={field.value || {}}
-                           onChange={field.onChange}
-                           variantIndex={index}
-                        />
-                     )}
-                  />
                </div>
             ))}
          </CardContent>
       </Card>
-   );
-}
-
-// ============================================================================
-// Attributes Editor Component
-// ============================================================================
-
-interface AttributesEditorProps {
-   attributes: Record<string, string>;
-   onChange: (attributes: Record<string, string>) => void;
-   variantIndex: number;
-}
-
-function AttributesEditor({ attributes, onChange, variantIndex }: AttributesEditorProps) {
-   const entries = Object.entries(attributes);
-
-   const handleAddAttribute = () => {
-      onChange({ ...attributes, "": "" });
-   };
-
-   const handleRemoveAttribute = (key: string) => {
-      const newAttrs = { ...attributes };
-      delete newAttrs[key];
-      onChange(newAttrs);
-   };
-
-   const handleKeyChange = (oldKey: string, newKey: string) => {
-      if (oldKey === newKey) return;
-      const newAttrs: Record<string, string> = {};
-      for (const [k, v] of Object.entries(attributes)) {
-         if (k === oldKey) {
-            newAttrs[newKey] = v;
-         } else {
-            newAttrs[k] = v;
-         }
-      }
-      onChange(newAttrs);
-   };
-
-   const handleValueChange = (key: string, value: string) => {
-      onChange({ ...attributes, [key]: value });
-   };
-
-   return (
-      <Field>
-         <div className="flex items-center justify-between">
-            <FieldLabel>Attributes</FieldLabel>
-            <Button
-               type="button"
-               variant="ghost"
-               size="sm"
-               onClick={handleAddAttribute}
-               className="h-7 text-xs"
-            >
-               <Plus className="mr-1 h-3 w-3" />
-               Add Attribute
-            </Button>
-         </div>
-         <FieldDescription className="text-xs mb-2">
-            Add key-value attributes like Size, Color, Material, etc.
-         </FieldDescription>
-         {entries.length > 0 ? (
-            <div className="space-y-2">
-               {entries.map(([key, value], attrIndex) => (
-                  <div key={`${variantIndex}-attr-${attrIndex}`} className="flex gap-2">
-                     <Input
-                        placeholder="Key (e.g. Size)"
-                        value={key}
-                        onChange={(e) => handleKeyChange(key, e.target.value)}
-                        className="flex-1"
-                     />
-                     <Input
-                        placeholder="Value (e.g. XL)"
-                        value={value}
-                        onChange={(e) => handleValueChange(key, e.target.value)}
-                        className="flex-1"
-                     />
-                     <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveAttribute(key)}
-                        className="text-destructive hover:text-destructive shrink-0"
-                     >
-                        <X className="h-4 w-4" />
-                     </Button>
-                  </div>
-               ))}
-            </div>
-         ) : (
-            <p className="text-xs text-muted-foreground italic">
-               No attributes added yet.
-            </p>
-         )}
-      </Field>
    );
 }

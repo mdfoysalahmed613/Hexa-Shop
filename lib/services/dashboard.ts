@@ -187,7 +187,7 @@ export async function getDashboardData(): Promise<DashboardResult> {
       supabase.from("products").select(`
           id,
           name,
-          variants:products_variants(stock, is_active)
+          variants:product_variants(stock, is_active)
         `),
 
       // Customer count from admin auth

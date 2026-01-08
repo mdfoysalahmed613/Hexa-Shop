@@ -18,7 +18,6 @@
  */
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
@@ -66,7 +65,6 @@ type CheckoutFormData = z.infer<typeof checkoutSchema>;
 // ============================================================================
 
 export function CheckoutPageClient() {
-   const router = useRouter();
    const { items, subtotal, clearCart } = useCart();
    const { user } = useUser();
    const createOrderMutation = useCreateOrder();
@@ -96,7 +94,6 @@ export function CheckoutPageClient() {
          items: items.map((item) => ({
             variant_id: item.variantId,
             product_name: item.name,
-            variant_name: item.variantName,
             product_image_url: item.image,
             unit_price: item.price,
             quantity: item.quantity,
@@ -416,8 +413,10 @@ export function CheckoutPageClient() {
                                  </div>
                                  <div className="flex-1 min-w-0">
                                     <p className="font-medium text-sm truncate">{item.name}</p>
-                                    {item.variantName && (
-                                       <p className="text-xs text-muted-foreground">{item.variantName}</p>
+                                    {(item.size || item.color) && (
+                                       <p className="text-xs text-muted-foreground">
+                                          {[item.size, item.color].filter(Boolean).join(" / ")}
+                                       </p>
                                     )}
                                     <p className="text-sm font-medium mt-1">
                                        ${(item.price * item.quantity).toFixed(2)}

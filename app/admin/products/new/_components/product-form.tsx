@@ -27,6 +27,8 @@ import {
    type ProductFormData,
    defaultProductFormValues,
    defaultVariant,
+   type ValidSize,
+   VALID_SIZES,
 } from "./product-form-schema";
 import { useAddProduct, useUpdateProduct } from "@/hooks/use-products";
 import { type Product } from "@/lib/services/products";
@@ -61,12 +63,13 @@ export function ProductForm({ product }: { product?: Product }) {
                product.variants && product.variants.length > 0
                   ? product.variants.map((v) => ({
                      id: v.id,
-                     price: v.price || v.price_adjustment || 0,
+                     price: v.price || 0,
                      compare_price: v.compare_price || null,
                      stock: v.stock,
                      is_active: v.is_active,
-                     variant_name: v.variant_name || null,
-                     attributes: v.attributes || {},
+                     sku: v.sku || null,
+                     size: (v.size && VALID_SIZES.includes(v.size as ValidSize) ? v.size : null) as ValidSize | null,
+                     color: v.color || null,
                   }))
                   : [defaultVariant],
             images: [],
@@ -140,10 +143,10 @@ export function ProductForm({ product }: { product?: Product }) {
             <div className="space-y-6">
                <ProductBasicInfo control={control} />
                <ProductVariants control={control} errors={errors} />
-               <ProductImages 
-                  control={control} 
-                  setValue={setValue} 
-                  isEditing={isEditing} 
+               <ProductImages
+                  control={control}
+                  setValue={setValue}
+                  isEditing={isEditing}
                />
             </div>
 

@@ -12,7 +12,7 @@ import {
    ColumnFiltersState,
    RowSelectionState,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
    ChevronLeft,
    ChevronRight,
@@ -68,16 +68,7 @@ export function DataTable<TData, TValue>({
       getFilteredRowModel: getFilteredRowModel(),
       onSortingChange: setSorting,
       onColumnFiltersChange: setColumnFilters,
-      onRowSelectionChange: (updater) => {
-         const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater;
-         setRowSelection(newSelection);
-         if (onRowSelectionChange) {
-            const selectedRows = Object.keys(newSelection)
-               .filter(key => newSelection[key])
-               .map(key => data[parseInt(key)]);
-            onRowSelectionChange(selectedRows);
-         }
-      },
+      onRowSelectionChange: setRowSelection,
       enableRowSelection,
       state: {
          sorting,
@@ -91,7 +82,17 @@ export function DataTable<TData, TValue>({
       },
    });
 
+   // Notify parent of selection changes
    const selectedCount = Object.keys(rowSelection).filter(k => rowSelection[k]).length;
+
+   // Notify parent of selection changes - use JSON stringified rowSelection as dependency
+   useEffect(() => {
+      if (onRowSelectionChange && enableRowSelection) {
+         const rows = table.getFilteredSelectedRowModel().rows.map(row => row.original);
+         onRowSelectionChange(rows as TData[]);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [rowSelection]);
 
    const totalRows = table.getFilteredRowModel().rows.length;
 

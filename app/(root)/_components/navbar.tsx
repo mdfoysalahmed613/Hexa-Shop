@@ -52,7 +52,7 @@ function SearchResultsDropdown({
    onProductClick,
    onViewAllClick,
 }: SearchResultsDropdownProps) {
-   if (!showResults || searchQuery.length < 2) return null;
+   if (!showResults || searchQuery.length < 1) return null;
 
    return (
       <div className="absolute top-full left-0 right-0 mt-2 bg-background border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
@@ -120,7 +120,7 @@ export function Navbar() {
 
    const { data: searchResults, isLoading: isSearching } = useSearchProducts(
       searchQuery,
-      searchQuery.length >= 2
+      searchQuery.length >= 1
    );
 
    // Close dropdown when clicking outside
@@ -140,14 +140,14 @@ export function Navbar() {
    }, []);
 
    const handleSearchFocus = useCallback(() => {
-      if (searchQuery.length >= 2) {
+      if (searchQuery.length >= 1) {
          setShowResults(true);
       }
    }, [searchQuery]);
 
    const handleSearchChange = useCallback((value: string) => {
       setSearchQuery(value);
-      if (value.length >= 2) {
+      if (value.length >= 1) {
          setShowResults(true);
       } else {
          setShowResults(false);

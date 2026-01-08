@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Copilot prompts (personal)
 .github/
+all.sql

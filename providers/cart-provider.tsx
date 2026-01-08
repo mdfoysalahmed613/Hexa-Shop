@@ -29,7 +29,8 @@ export interface CartItem {
    quantity: number;
    stock: number;
    image: string | null;
-   variantName: string | null;
+   size: string | null;
+   color: string | null;
 }
 
 interface CartContextType {
@@ -115,7 +116,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                quantity: Math.min(quantity, variant.stock),
                stock: variant.stock,
                image: product.primary_image?.url || null,
-               variantName: variant.variant_name || null,
+               size: variant.size || null,
+               color: variant.color || null,
             };
 
             return [...prev, newItem];

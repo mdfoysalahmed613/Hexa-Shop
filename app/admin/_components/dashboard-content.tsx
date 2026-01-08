@@ -56,28 +56,6 @@ function formatRelativeTime(dateString: string): string {
 // ============================================================================
 
 /**
- * Skeleton for stats cards during loading
- */
-function StatsCardsSkeleton() {
-   return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-         {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-4" />
-               </CardHeader>
-               <CardContent>
-                  <Skeleton className="h-8 w-32 mb-2" />
-                  <Skeleton className="h-3 w-24" />
-               </CardContent>
-            </Card>
-         ))}
-      </div>
-   );
-}
-
-/**
  * Skeleton for recent orders list during loading
  */
 function RecentOrdersSkeleton() {
@@ -165,7 +143,7 @@ export function DashboardContent() {
       ? [
          {
             label: "Total Revenue",
-            value: data.stats.totalRevenue,
+            value: `$${data.stats.totalRevenue}`,
             icon: DollarSign,
             color: "success" as const,
          },
@@ -200,7 +178,7 @@ export function DashboardContent() {
             <div>
                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                <p className="text-muted-foreground">
-                  Overview of your store's state and performance.
+                  Overview of your store&apos;s state and performance.
                </p>
             </div>
             <Button asChild>
@@ -255,10 +233,12 @@ export function DashboardContent() {
                                     <Badge
                                        variant={
                                           order.status === "delivered"
-                                             ? "default"
+                                             ? "success"
                                              : order.status === "processing"
-                                                ? "secondary"
-                                                : "outline"
+                                                ? "warning"
+                                                : order.status === "cancelled"
+                                                   ? "destructive"
+                                                   : "outline"
                                        }
                                     >
                                        {order.status}

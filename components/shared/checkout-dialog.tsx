@@ -97,7 +97,6 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
             product_id: item.productId,
             variant_id: item.variantId,
             product_name: item.name,
-            variant_name: item.variantName,
             product_image_url: item.image,
             unit_price: item.price,
             quantity: item.quantity,
@@ -165,15 +164,18 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
                <div className="rounded-lg border p-4 bg-muted/50">
                   <h3 className="font-medium mb-3">Order Summary</h3>
                   <div className="space-y-2 text-sm">
-                     {items.map((item) => (
-                        <div key={item.id} className="flex justify-between">
-                           <span className="text-muted-foreground">
-                              {item.name} {item.variantName ? `(${item.variantName})` : ""} x{" "}
-                              {item.quantity}
-                           </span>
-                           <span>${(item.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                     ))}
+                     {items.map((item) => {
+                        const variantLabel = [item.size, item.color].filter(Boolean).join(" / ");
+                        return (
+                           <div key={item.id} className="flex justify-between">
+                              <span className="text-muted-foreground">
+                                 {item.name} {variantLabel ? `(${variantLabel})` : ""} x{" "}
+                                 {item.quantity}
+                              </span>
+                              <span>${(item.price * item.quantity).toFixed(2)}</span>
+                           </div>
+                        );
+                     })}
                      <Separator className="my-2" />
                      <div className="flex justify-between font-medium">
                         <span>Total</span>
