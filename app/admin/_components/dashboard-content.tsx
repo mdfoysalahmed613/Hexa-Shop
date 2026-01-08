@@ -38,6 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { useDashboardData } from "@/hooks/use-dashboard";
 import { formatDistanceToNow } from "date-fns";
+import { StatsCards, type StatItem } from "@/components/shared/stats-cards";
 
 // ============================================================================
 // Helper Functions
@@ -160,28 +161,31 @@ export function DashboardContent() {
    // Stats Configuration
    // ========================================================================
    // Build stats array from real data (or use placeholder during loading)
-   const stats = data
+   const stats: StatItem[] = data
       ? [
          {
-            title: "Total Revenue",
+            label: "Total Revenue",
             value: data.stats.totalRevenue,
             icon: DollarSign,
+            color: "success" as const,
          },
          {
-            title: "Orders",
+            label: "Orders",
             value: data.stats.totalOrders,
             icon: ShoppingCart,
+            color: "info" as const,
          },
          {
-            title: "Products",
+            label: "Products",
             value: data.stats.totalProducts,
             icon: Package,
-            description: `${data.stats.productsInStock} in stock`,
+            color: "warning" as const,
          },
          {
-            title: "Customers",
+            label: "Customers",
             value: data.stats.totalCustomers,
             icon: Users,
+            color: "default" as const,
          },
       ]
       : [];
@@ -207,25 +211,7 @@ export function DashboardContent() {
          {/* ================================================================== */}
          {/* Stats Grid - Key Business Metrics */}
          {/* ================================================================== */}
-         {isLoading ? (
-            <StatsCardsSkeleton />
-         ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-               {stats.map((stat) => (
-                  <Card key={stat.title}>
-                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                           {stat.title}
-                        </CardTitle>
-                        <stat.icon className="h-4 w-4 text-muted-foreground" />
-                     </CardHeader>
-                     <CardContent>
-                        <div className="text-2xl font-bold">{stat.value}</div>
-                     </CardContent>
-                  </Card>
-               ))}
-            </div>
-         )}
+         <StatsCards stats={stats} isLoading={isLoading} />
 
          {/* ================================================================== */}
          {/* Main Content Grid - Orders & Top Products */}

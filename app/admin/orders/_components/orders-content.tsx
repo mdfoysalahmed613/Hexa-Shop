@@ -32,7 +32,7 @@ import {
    MoreHorizontal,
    Trash2,
 } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -80,12 +80,12 @@ function getStatusIcon(status: OrderStatus) {
 
 function getStatusVariant(
    status: OrderStatus
-): "default" | "secondary" | "destructive" | "outline" {
+): "default" | "secondary" | "destructive" | "outline" | "success" | "warning" {
    switch (status) {
       case "delivered":
-         return "default";
+         return "success";
       case "processing":
-         return "secondary";
+         return "warning";
       case "cancelled":
          return "destructive";
       default:
@@ -394,20 +394,7 @@ export function OrdersContent() {
          </h1>
          {/* Orders Table */}
          <Card>
-            <CardHeader>
-               {/* Search - Top Left */}
-               <InputGroup className="max-w-lg">
-                  <InputGroupInput
-                     value={searchQuery}
-                     placeholder="Search by order #, customer..."
-                     onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <InputGroupAddon>
-                     <Search />
-                  </InputGroupAddon>
-               </InputGroup>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
                {isLoading ? (
                   <div className="flex items-center justify-center py-8">
                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -440,6 +427,18 @@ export function OrdersContent() {
                      pageSize={10}
                      enableRowSelection
                      onRowSelectionChange={handleRowSelectionChange}
+                     searchBar={
+                        <InputGroup className="max-w-lg">
+                           <InputGroupInput
+                              value={searchQuery}
+                              placeholder="Search by order #, customer..."
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                           />
+                           <InputGroupAddon>
+                              <Search />
+                           </InputGroupAddon>
+                        </InputGroup>
+                     }
                      bulkActionsToolbar={
                         <>
                            <DropdownMenu>

@@ -43,6 +43,7 @@ interface DataTableProps<TData, TValue> {
    enableRowSelection?: boolean;
    onRowSelectionChange?: (selectedRows: TData[]) => void;
    bulkActionsToolbar?: React.ReactNode;
+   searchBar?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -52,6 +53,7 @@ export function DataTable<TData, TValue>({
    enableRowSelection = false,
    onRowSelectionChange,
    bulkActionsToolbar,
+   searchBar,
 }: DataTableProps<TData, TValue>) {
    const [sorting, setSorting] = useState<SortingState>([]);
    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -91,8 +93,36 @@ export function DataTable<TData, TValue>({
 
    const selectedCount = Object.keys(rowSelection).filter(k => rowSelection[k]).length;
 
+   const totalRows = table.getFilteredRowModel().rows.length;
+
    return (
       <div className="space-y-4">
+         {/* Search Bar and Page Size Selector Row */}
+         {(searchBar || enableRowSelection) && (
+            <div className="flex items-center justify-between gap-4">
+               <div className="flex-1">
+                  {searchBar}
+               </div>
+               <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Rows per page</span>
+                  <Select
+                     value={table.getState().pagination.pageSize.toString()}
+                     onValueChange={(value) => table.setPageSize(Number(value))}
+                  >
+                     <SelectTrigger className="h-8 w-[70px]">
+                        <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                        {[10, 20, 30, 50, 100].map((size) => (
+                           <SelectItem key={size} value={size.toString()}>
+                              {size}
+                           </SelectItem>
+                        ))}
+                     </SelectContent>
+                  </Select>
+               </div>
+            </div>
+         )}
          {/* Bulk Actions Toolbar */}
          {enableRowSelection && selectedCount > 0 && bulkActionsToolbar && (
             <div className="flex items-center gap-4 rounded-lg border border-primary/20 bg-primary/5 p-3">
@@ -164,34 +194,25 @@ export function DataTable<TData, TValue>({
          {/* Pagination */}
          <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-               <span>
-                  Showing{" "}
-                  {table.getState().pagination.pageIndex *
-                     table.getState().pagination.pageSize +
-                     1}{" "}
-                  to{" "}
-                  {Math.min(
-                     (table.getState().pagination.pageIndex + 1) *
-                     table.getState().pagination.pageSize,
-                     table.getFilteredRowModel().rows.length
-                  )}{" "}
-                  of {table.getFilteredRowModel().rows.length} entries
-               </span>
-               <Select
-                  value={table.getState().pagination.pageSize.toString()}
-                  onValueChange={(value) => table.setPageSize(Number(value))}
-               >
-                  <SelectTrigger className="h-8 w-[70px]">
-                     <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                     {[10, 20, 30, 50, 100].map((size) => (
-                        <SelectItem key={size} value={size.toString()}>
-                           {size}
-                        </SelectItem>
-                     ))}
-                  </SelectContent>
-               </Select>
+               {enableRowSelection ? (
+                  <span>
+                     {selectedCount} of {totalRows} row{totalRows !== 1 ? "s" : ""} selected
+                  </span>
+               ) : (
+                  <span>
+                     Showing{" "}
+                     {table.getState().pagination.pageIndex *
+                        table.getState().pagination.pageSize +
+                        1}{" "}
+                     to{" "}
+                     {Math.min(
+                        (table.getState().pagination.pageIndex + 1) *
+                        table.getState().pagination.pageSize,
+                        totalRows
+                     )}{" "}
+                     of {totalRows} entries
+                  </span>
+               )}
             </div>
 
             <div className="flex items-center gap-2">
