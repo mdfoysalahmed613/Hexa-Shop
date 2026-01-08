@@ -1,4 +1,9 @@
 export { ProductForm } from "./product-form";
+export { ProductBasicInfo } from "./product-basic-info";
+export { ProductVariants } from "./product-variants";
+export { ProductImages } from "./product-images";
+export { ProductSettings } from "./product-settings";
+export { ProductActions } from "./product-actions";
 export {
   productFormSchema,
   variantFormSchema,

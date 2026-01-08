@@ -54,6 +54,7 @@ import { useCustomers, useMakeAdmin, useDeleteCustomer } from "@/hooks/use-custo
 import { StatsCards } from "@/components/shared/stats-cards";
 import { DataTable } from "@/components/ui/data-table";
 import type { Customer } from "@/lib/services/customers";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 // ============================================================================
 // Helper Functions
@@ -304,20 +305,22 @@ export function CustomersPageClient() {
 
          {/* Stats Cards */}
          <StatsCards stats={statsItems} isLoading={isLoading} />
-
+         <h1 className="text-lg font-semibold ">
+            All Users ({filteredCustomers.length})
+         </h1>
          {/* Customers Table */}
          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-               <CardTitle>All Users ({filteredCustomers.length})</CardTitle>
-               <div className="relative w-72">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                     placeholder="Search by name or email..."
+            <CardHeader>
+               <InputGroup className="max-w-lg">
+                  <InputGroupInput
                      value={searchQuery}
+                     placeholder="Search by name or email..."
                      onChange={(e) => setSearchQuery(e.target.value)}
-                     className="pl-9"
                   />
-               </div>
+                  <InputGroupAddon>
+                     <Search />
+                  </InputGroupAddon>
+               </InputGroup>
             </CardHeader>
             <CardContent>
                {isLoading ? (

@@ -28,10 +28,9 @@ import {
    Package,
    ShoppingCart,
    DollarSign,
-   TrendingUp,
-   TrendingDown,
    ArrowUpRight,
    AlertCircle,
+   Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,35 +42,6 @@ import { formatDistanceToNow } from "date-fns";
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Format currency value for display
- * Uses Bangladeshi Taka (BDT) as the default currency
- */
-function formatCurrency(amount: number): string {
-   return new Intl.NumberFormat("en-BD", {
-      style: "currency",
-      currency: "BDT",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-   }).format(amount);
-}
-
-/**
- * Format large numbers with comma separators
- */
-function formatNumber(num: number): string {
-   return new Intl.NumberFormat("en-US").format(num);
-}
-
-/**
- * Format percentage change for display
- * Returns string with + or - prefix
- */
-function formatChange(change: number): string {
-   const prefix = change >= 0 ? "+" : "";
-   return `${prefix}${change}%`;
-}
 
 /**
  * Format relative time (e.g., "2 hours ago")
@@ -194,35 +164,24 @@ export function DashboardContent() {
       ? [
          {
             title: "Total Revenue",
-            value: formatCurrency(data.stats.totalRevenue),
-            change: formatChange(data.stats.revenueChange),
-            trend: data.stats.revenueChange >= 0 ? "up" : "down",
+            value: data.stats.totalRevenue,
             icon: DollarSign,
-            description: "this month",
          },
          {
             title: "Orders",
-            value: formatNumber(data.stats.totalOrders),
-            change: formatChange(data.stats.ordersChange),
-            trend: data.stats.ordersChange >= 0 ? "up" : "down",
+            value: data.stats.totalOrders,
             icon: ShoppingCart,
-            description: "this month",
          },
          {
             title: "Products",
-            value: formatNumber(data.stats.totalProducts),
-            change: "",
-            trend: "neutral" as const,
+            value: data.stats.totalProducts,
             icon: Package,
             description: `${data.stats.productsInStock} in stock`,
          },
          {
             title: "Customers",
-            value: formatNumber(data.stats.totalCustomers),
-            change: formatChange(data.stats.customersChange),
-            trend: data.stats.customersChange >= 0 ? "up" : "down",
+            value: data.stats.totalCustomers,
             icon: Users,
-            description: "this month",
          },
       ]
       : [];
@@ -236,9 +195,12 @@ export function DashboardContent() {
          <div className="flex items-center justify-between">
             <div>
                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+               <p className="text-muted-foreground">
+                  Overview of your store's state and performance.
+               </p>
             </div>
             <Button asChild>
-               <Link href="/admin/products/new">Add Product</Link>
+               <Link href="/admin/products/new">< Plus className="mr-2 h-4 w-4" /> Add Product</Link>
             </Button>
          </div>
 
@@ -259,28 +221,6 @@ export function DashboardContent() {
                      </CardHeader>
                      <CardContent>
                         <div className="text-2xl font-bold">{stat.value}</div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                           {stat.trend === "up" && (
-                              <TrendingUp className="h-3 w-3 text-green-500" />
-                           )}
-                           {stat.trend === "down" && (
-                              <TrendingDown className="h-3 w-3 text-red-500" />
-                           )}
-                           {stat.change && (
-                              <span
-                                 className={
-                                    stat.trend === "up"
-                                       ? "text-green-500"
-                                       : stat.trend === "down"
-                                          ? "text-red-500"
-                                          : ""
-                                 }
-                              >
-                                 {stat.change}
-                              </span>
-                           )}
-                           <span>{stat.description}</span>
-                        </div>
                      </CardContent>
                   </Card>
                ))}
@@ -341,7 +281,7 @@ export function DashboardContent() {
                               </div>
                               <div className="text-right">
                                  <p className="text-sm font-medium">
-                                    {formatCurrency(order.amount)}
+                                    {order.amount}
                                  </p>
                                  <p className="text-xs text-muted-foreground">
                                     {formatRelativeTime(order.createdAt)}
@@ -387,7 +327,7 @@ export function DashboardContent() {
                                  </div>
                               </div>
                               <div className="text-sm font-medium">
-                                 {formatCurrency(product.totalRevenue)}
+                                 {product.totalRevenue}
                               </div>
                            </div>
                         ))}

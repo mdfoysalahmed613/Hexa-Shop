@@ -9,11 +9,13 @@ When reviewing the code changes, please consider the following:
 2. Check for potential bugs or issues that may arise from the changes.
 3. Suggest improvements or optimizations where applicable.
 
+I dont want to push .github/prompts/Global.prompts.md file to the repository. please make changes in the .gitignore file to ignore this file.
 
+Can you please update the copilot instructions based on the current stacture so that copilot will understand the current structure of the codebase easily.
 
-I want search functionality in all orders page and filter functionality and also sort functionality in Data,total column in all orders page. and the other submenu like pending orders,completed orders,canceled orders,processing orders doesn't working properly. please fix it.
+in every page i used colorfull states then in the main dashboard i use colorless stats cards. Is it good to use colorless stats cards in the main dashboard or should i use colorfull stats cards everywhere in the application for better user experience.
+Please provide your suggestions and the updated code snippets if necessary.
 
-In all products page, i want the search functionality should be in the center of the page the in the right side the per product dropdown is there. please move the search functionality to the center of the page and per page product select dropdown to the right side. and do this same thing in all orders page, customer page as well.In the all categories page, the serach functionality ui should match the other page like all products page, all orders page etc. please fix it.
+I want to change the all orders data table format ,, i want multi checkbox selection to make bulk actions on orders. Can you please help me to implement this feature in the codebase.
 
-
-
+and i want 3 dot button on each row to perform actions on each order. Can you please help me to implement this feature in the codebase.

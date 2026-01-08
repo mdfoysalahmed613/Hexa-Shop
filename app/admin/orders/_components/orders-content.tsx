@@ -13,7 +13,7 @@
  * - Quick view action to order details
  */
 
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -27,11 +27,12 @@ import {
    DollarSign,
    Loader2,
    RefreshCw,
+   Search,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import {
    useOrders,
    useOrderStats,
@@ -41,6 +42,7 @@ import {
 } from "@/hooks/use-orders";
 import { StatsCards } from "@/components/shared/stats-cards";
 import { DataTable } from "@/components/ui/data-table";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 // ============================================================================
 // Helper Functions
@@ -94,6 +96,25 @@ function getPaymentStatusVariant(
 export function OrdersContent() {
    const { data: orders = [], isLoading, refetch, isRefetching } = useOrders();
    const { data: stats, isLoading: statsLoading } = useOrderStats();
+
+   // Search state
+   const [searchQuery, setSearchQuery] = useState("");
+
+   // Filter orders by search query
+   const filteredOrders = useMemo(() => {
+      if (!searchQuery) return orders;
+      const query = searchQuery.toLowerCase();
+      return orders.filter((order) => {
+         const orderNumber = order.order_number.toLowerCase();
+         const customerName = order.customer_name?.toLowerCase() || "";
+         const customerEmail = order.customer_email?.toLowerCase() || "";
+         return (
+            orderNumber.includes(query) ||
+            customerName.includes(query) ||
+            customerEmail.includes(query)
+         );
+      });
+   }, [orders, searchQuery]);
 
    // Build stats items
    const statsItems = useMemo(
@@ -229,27 +250,52 @@ export function OrdersContent() {
 
          {/* Stats Cards */}
          <StatsCards stats={statsItems} isLoading={statsLoading} />
-
+         <h1 className="text-lg font-semibold ">
+            All Orders ({filteredOrders.length})
+         </h1>
          {/* Orders Table */}
          <Card>
             <CardHeader>
-               <CardTitle>All Orders ({orders.length})</CardTitle>
+               {/* Search - Top Left */}
+               <InputGroup className="max-w-lg">
+                  <InputGroupInput
+                     value={searchQuery}
+                     placeholder="Search by order #, customer..."
+                     onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <InputGroupAddon>
+                     <Search />
+                  </InputGroupAddon>
+               </InputGroup>
             </CardHeader>
             <CardContent>
                {isLoading ? (
                   <div className="flex items-center justify-center py-8">
                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
-               ) : orders.length === 0 ? (
+               ) : filteredOrders.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                      <ShoppingCart className="h-12 w-12 text-muted-foreground mb-4" />
-                     <h3 className="text-lg font-semibold">No orders found</h3>
+                     <h3 className="text-lg font-semibold">
+                        {searchQuery ? "No orders found" : "No orders yet"}
+                     </h3>
                      <p className="text-sm text-muted-foreground">
-                        Orders will appear here when customers make purchases
+                        {searchQuery
+                           ? "Try adjusting your search."
+                           : "Orders will appear here when customers make purchases"}
                      </p>
+                     {searchQuery && (
+                        <Button
+                           variant="outline"
+                           onClick={() => setSearchQuery("")}
+                           className="mt-4"
+                        >
+                           Clear Search
+                        </Button>
+                     )}
                   </div>
                ) : (
-                  <DataTable columns={columns} data={orders} pageSize={10} />
+                  <DataTable columns={columns} data={filteredOrders} pageSize={10} />
                )}
             </CardContent>
          </Card>

@@ -27,13 +27,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { StatsCards, type StatItem } from "@/components/shared/stats-cards";
 import { useCategories } from "@/hooks/use-categories";
 import { type Category } from "@/lib/services/categories";
 import { CategoryFormPanel } from "./category-form-panel";
 import { CategoryEditDialog } from "./category-edit-dialog";
 import { CategoryCard } from "./category-card";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 // Build hierarchical tree from flat categories
 interface CategoryNode extends Category {
@@ -163,30 +163,22 @@ export function CategoriesPageClient() {
 
         {/* Stats Cards */}
         <StatsCards stats={stats} isLoading={isLoading} />
-
+          <h1 className="text-lg font-semibold ">
+            All Categories ({hierarchicalCategories.length})
+          </h1>
         {/* Categories List Card */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <div>
-              <CardTitle className="text-base">All Categories</CardTitle>
-              {isLoading ? (
-                <Skeleton className="h-4 w-24 mt-1" />
-              ) : (
-                <span className="text-sm text-muted-foreground">
-                  {hierarchicalCategories.length} categories found
-                </span>
-              )}
-            </div>
-            {/* Search */}
-            <div className="relative w-72">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
+          <CardHeader>
+            <InputGroup className="max-w-lg">
+              <InputGroupInput
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search categories..."
-                className="pl-9"
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </div>
+              <InputGroupAddon>
+                <Search />
+              </InputGroupAddon>
+            </InputGroup>
           </CardHeader>
 
           <CardContent>
