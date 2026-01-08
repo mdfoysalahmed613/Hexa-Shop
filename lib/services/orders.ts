@@ -434,6 +434,115 @@ export async function updatePaymentStatus(
 }
 
 /**
+ * Bulk update order status (admin only)
+ */
+export async function bulkUpdateOrderStatus(
+  ids: string[],
+  order_status: OrderStatus
+): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!hasAdminAccess(user)) {
+      return { ok: false, error: "Admin access required" };
+    }
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ order_status })
+      .in("id", ids);
+
+    if (error) {
+      console.error("Bulk update order status error:", error);
+      return { ok: false, error: "Failed to update order statuses" };
+    }
+
+    revalidatePath("/admin/orders");
+
+    return { ok: true };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    console.error("Bulk update order status error:", e);
+    return { ok: false, error: message };
+  }
+}
+
+/**
+ * Bulk update payment status (admin only)
+ */
+export async function bulkUpdatePaymentStatus(
+  ids: string[],
+  payment_status: PaymentStatus
+): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!hasAdminAccess(user)) {
+      return { ok: false, error: "Admin access required" };
+    }
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ payment_status })
+      .in("id", ids);
+
+    if (error) {
+      console.error("Bulk update payment status error:", error);
+      return { ok: false, error: "Failed to update payment statuses" };
+    }
+
+    revalidatePath("/admin/orders");
+
+    return { ok: true };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    console.error("Bulk update payment status error:", e);
+    return { ok: false, error: message };
+  }
+}
+
+/**
+ * Bulk delete orders (admin only - full admin, not demo)
+ */
+export async function bulkDeleteOrders(ids: string[]): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Only full admin can delete
+    if (!isAdmin(user)) {
+      return { ok: false, error: "Only admin users can delete orders" };
+    }
+
+    const { error } = await supabase.from("orders").delete().in("id", ids);
+
+    if (error) {
+      console.error("Bulk delete orders error:", error);
+      return { ok: false, error: "Failed to delete orders" };
+    }
+
+    revalidatePath("/admin/orders");
+
+    return { ok: true };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    console.error("Bulk delete orders error:", e);
+    return { ok: false, error: message };
+  }
+}
+
+/**
  * Delete an order (admin only - full admin, not demo)
  */
 export async function deleteOrder(id: string): Promise<ActionResult> {

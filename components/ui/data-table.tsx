@@ -10,6 +10,7 @@ import {
    useReactTable,
    SortingState,
    ColumnFiltersState,
+   RowSelectionState,
 } from "@tanstack/react-table";
 import { useState } from "react";
 import {
@@ -39,15 +40,22 @@ interface DataTableProps<TData, TValue> {
    columns: ColumnDef<TData, TValue>[];
    data: TData[];
    pageSize?: number;
+   enableRowSelection?: boolean;
+   onRowSelectionChange?: (selectedRows: TData[]) => void;
+   bulkActionsToolbar?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
    columns,
    data,
    pageSize = 10,
+   enableRowSelection = false,
+   onRowSelectionChange,
+   bulkActionsToolbar,
 }: DataTableProps<TData, TValue>) {
    const [sorting, setSorting] = useState<SortingState>([]);
    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
    const table = useReactTable({
       data,
@@ -58,9 +66,21 @@ export function DataTable<TData, TValue>({
       getFilteredRowModel: getFilteredRowModel(),
       onSortingChange: setSorting,
       onColumnFiltersChange: setColumnFilters,
+      onRowSelectionChange: (updater) => {
+         const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater;
+         setRowSelection(newSelection);
+         if (onRowSelectionChange) {
+            const selectedRows = Object.keys(newSelection)
+               .filter(key => newSelection[key])
+               .map(key => data[parseInt(key)]);
+            onRowSelectionChange(selectedRows);
+         }
+      },
+      enableRowSelection,
       state: {
          sorting,
          columnFilters,
+         rowSelection,
       },
       initialState: {
          pagination: {
@@ -69,8 +89,29 @@ export function DataTable<TData, TValue>({
       },
    });
 
+   const selectedCount = Object.keys(rowSelection).filter(k => rowSelection[k]).length;
+
    return (
       <div className="space-y-4">
+         {/* Bulk Actions Toolbar */}
+         {enableRowSelection && selectedCount > 0 && bulkActionsToolbar && (
+            <div className="flex items-center gap-4 rounded-lg border border-primary/20 bg-primary/5 p-3">
+               <span className="text-sm font-medium">
+                  {selectedCount} row{selectedCount > 1 ? "s" : ""} selected
+               </span>
+               <div className="flex items-center gap-2">
+                  {bulkActionsToolbar}
+               </div>
+               <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setRowSelection({})}
+                  className="ml-auto"
+               >
+                  Clear selection
+               </Button>
+            </div>
+         )}
          <div className="rounded-md border">
             <Table>
                <TableHeader>

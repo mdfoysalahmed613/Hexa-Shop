@@ -56,16 +56,53 @@ const { user, isLoading, refreshUser } = useUser();
 ```
 app/
   (root)/              # Public storefront (route group, invisible in URL)
+    _actions/          # Client-side actions (e.g., demo-admin.ts)
+    _components/       # Page-specific components (navbar, hero, category-section)
+    checkout/          # Checkout flow with cart → order
+    products/          # Product listing and [slug] detail pages
   admin/               # Protected dashboard (sidebar layout)
+    _components/       # Admin layout components (app-sidebar, breadcrumb, footer-user)
+    analytics/         # Analytics dashboard
+    customers/         # Customer management
+    orders/            # Order management with [id] detail view
+    products/          # Products & categories CRUD
+    settings/          # Store settings (shipping, etc.)
   auth/                # Login, signup, OAuth callback, password reset
+    callback/          # OAuth callback handler
+    confirm/           # Email confirmation
+    forgot-password/   # Password reset request
+    update-password/   # Password reset completion
 lib/
-  services/            # Server Actions with "use server" (categories.ts, products.ts)
-  supabase/            # server.ts, client.ts, proxy.ts, supabase-admin.ts
-  auth/roles.ts        # isAdmin(), isDemoAdmin(), hasAdminAccess()
+  services/            # Server Actions with "use server"
+    categories.ts      # Category CRUD
+    customers.ts       # Customer management
+    dashboard.ts       # Dashboard statistics
+    orders.ts          # Order management & checkout
+    products.ts        # Product CRUD
+    product-images.ts  # Product image handling
+  supabase/            # Supabase client utilities
+    server.ts          # Server-side client (await createClient())
+    client.ts          # Client-side client
+    proxy.ts           # Middleware auth proxy
+    supabase-admin.ts  # Service role admin client
+  auth/
+    roles.ts           # isAdmin(), isDemoAdmin(), hasAdminAccess()
+hooks/                 # TanStack Query hooks
+  use-categories.ts    # Category queries & mutations
+  use-customers.ts     # Customer queries
+  use-dashboard.ts     # Dashboard data hook
+  use-orders.ts        # Order queries & mutations
+  use-products.ts      # Product queries & mutations
+  use-mobile.ts        # Mobile detection hook
+  use-swipe.ts         # Touch swipe handling
 components/
   ui/                  # shadcn/ui primitives (new-york style, CVA variants)
-  admin/               # Admin-specific (sidebar/, categories/, products/)
-  auth/                # Auth forms (login-form.tsx, sign-up-form.tsx)
+  common/              # Theme switcher, etc.
+  shared/              # Reusable across app (stats-cards, cart-sheet, dialogs)
+providers/
+  cart-provider.tsx    # Shopping cart context
+  query-provider.tsx   # TanStack Query provider
+  user-provider.tsx    # User context with useUser() hook
 ```
 
 ## UI Patterns
@@ -269,3 +306,70 @@ const { control, handleSubmit, setValue } = useForm<FormData>({
 const imageFile = useWatch({ control, name: "image" });
 const currentImageUrl = useWatch({ control, name: "image_url" });
 ```
+
+## DataTable Pattern with Row Selection
+
+Use `@tanstack/react-table` for data tables. The `DataTable` component in `components/ui/data-table.tsx` supports:
+
+- Row selection with checkboxes
+- Bulk actions toolbar
+- Column sorting and filtering
+- Pagination with page size control
+- Row actions with dropdown menu (3-dot menu)
+
+```typescript
+// Example: Selection column
+{
+  id: "select",
+  header: ({ table }) => (
+    <Checkbox
+      checked={table.getIsAllPageRowsSelected()}
+      onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
+    />
+  ),
+  cell: ({ row }) => (
+    <Checkbox
+      checked={row.getIsSelected()}
+      onCheckedChange={(v) => row.toggleSelected(!!v)}
+    />
+  ),
+}
+
+// Example: Actions column with dropdown
+{
+  id: "actions",
+  cell: ({ row }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem>View details</DropdownMenuItem>
+        <DropdownMenuItem>Edit</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+}
+```
+
+## Stats Cards Pattern
+
+Use `StatsCards` component from `components/shared/stats-cards.tsx` for displaying metrics:
+
+```typescript
+import { StatsCards, type StatItem } from "@/components/shared/stats-cards";
+
+const stats: StatItem[] = [
+  { label: "Total Orders", value: 150, icon: ShoppingCart, color: "default" },
+  { label: "Processing", value: 12, icon: Clock, color: "warning" },
+  { label: "Delivered", value: 138, icon: CheckCircle, color: "success" },
+];
+
+<StatsCards stats={stats} isLoading={isLoading} />;
+```
+
+Colors: `"default"` | `"success"` | `"warning"` | `"danger"` | `"info"`

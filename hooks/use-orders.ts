@@ -25,6 +25,9 @@ import {
   updateOrderStatus,
   updatePaymentStatus,
   deleteOrder,
+  bulkUpdateOrderStatus,
+  bulkUpdatePaymentStatus,
+  bulkDeleteOrders,
   type Order,
   type OrderStatus,
   type PaymentStatus,
@@ -214,6 +217,100 @@ export function useDeleteOrder() {
       queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ORDER_STATS_QUERY_KEY });
       toast.success("Order deleted!");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+// ============================================================================
+// Bulk Mutations
+// ============================================================================
+
+/**
+ * Hook to bulk update order status (admin)
+ */
+export function useBulkUpdateOrderStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      ids,
+      order_status,
+    }: {
+      ids: string[];
+      order_status: OrderStatus;
+    }) => {
+      const result = await bulkUpdateOrderStatus(ids, order_status);
+      if (!result.ok) {
+        throw new Error(result.error || "Failed to update order statuses");
+      }
+      return result;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ORDER_STATS_QUERY_KEY });
+      toast.success(
+        `${variables.ids.length} order(s) updated to ${variables.order_status}!`
+      );
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+/**
+ * Hook to bulk update payment status (admin)
+ */
+export function useBulkUpdatePaymentStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      ids,
+      payment_status,
+    }: {
+      ids: string[];
+      payment_status: PaymentStatus;
+    }) => {
+      const result = await bulkUpdatePaymentStatus(ids, payment_status);
+      if (!result.ok) {
+        throw new Error(result.error || "Failed to update payment statuses");
+      }
+      return result;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
+      toast.success(
+        `${variables.ids.length} order(s) marked as ${variables.payment_status}!`
+      );
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+/**
+ * Hook to bulk delete orders (admin only)
+ */
+export function useBulkDeleteOrders() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const result = await bulkDeleteOrders(ids);
+      if (!result.ok) {
+        throw new Error(result.error || "Failed to delete orders");
+      }
+      return result;
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ORDERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ORDER_STATS_QUERY_KEY });
+      toast.success(`${ids.length} order(s) deleted!`);
     },
     onError: (error: Error) => {
       toast.error(error.message);

@@ -8,12 +8,13 @@
  *
  * Features:
  * - Order statistics cards (total, processing, delivered, revenue)
- * - Searchable/sortable data table
+ * - Searchable/sortable data table with row selection
+ * - Bulk actions for selected orders
  * - Status badges with icons
- * - Quick view action to order details
+ * - Row actions with dropdown menu (3-dot button)
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -28,14 +29,30 @@ import {
    Loader2,
    RefreshCw,
    Search,
+   MoreHorizontal,
+   Trash2,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuLabel,
+   DropdownMenuSeparator,
+   DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
    useOrders,
    useOrderStats,
+   useUpdateOrderStatus,
+   useUpdatePaymentStatus,
+   useDeleteOrder,
+   useBulkUpdateOrderStatus,
+   useBulkUpdatePaymentStatus,
+   useBulkDeleteOrders,
    type Order,
    type OrderStatus,
    type PaymentStatus,
@@ -100,6 +117,44 @@ export function OrdersContent() {
    // Search state
    const [searchQuery, setSearchQuery] = useState("");
 
+   // Selected rows state
+   const [selectedOrders, setSelectedOrders] = useState<Order[]>([]);
+
+   // Mutations
+   const updateOrderStatus = useUpdateOrderStatus();
+   const updatePaymentStatus = useUpdatePaymentStatus();
+   const deleteOrder = useDeleteOrder();
+   const bulkUpdateOrderStatus = useBulkUpdateOrderStatus();
+   const bulkUpdatePaymentStatus = useBulkUpdatePaymentStatus();
+   const bulkDeleteOrders = useBulkDeleteOrders();
+
+   // Row selection handler
+   const handleRowSelectionChange = useCallback((rows: Order[]) => {
+      setSelectedOrders(rows);
+   }, []);
+
+   // Bulk action handlers
+   const handleBulkStatusUpdate = useCallback((status: OrderStatus) => {
+      const ids = selectedOrders.map(o => o.id);
+      bulkUpdateOrderStatus.mutate({ ids, order_status: status }, {
+         onSuccess: () => setSelectedOrders([]),
+      });
+   }, [selectedOrders, bulkUpdateOrderStatus]);
+
+   const handleBulkPaymentUpdate = useCallback((status: PaymentStatus) => {
+      const ids = selectedOrders.map(o => o.id);
+      bulkUpdatePaymentStatus.mutate({ ids, payment_status: status }, {
+         onSuccess: () => setSelectedOrders([]),
+      });
+   }, [selectedOrders, bulkUpdatePaymentStatus]);
+
+   const handleBulkDelete = useCallback(() => {
+      const ids = selectedOrders.map(o => o.id);
+      bulkDeleteOrders.mutate(ids, {
+         onSuccess: () => setSelectedOrders([]),
+      });
+   }, [selectedOrders, bulkDeleteOrders]);
+
    // Filter orders by search query
    const filteredOrders = useMemo(() => {
       if (!searchQuery) return orders;
@@ -150,6 +205,28 @@ export function OrdersContent() {
    // Columns definition
    const columns: ColumnDef<Order>[] = useMemo(
       () => [
+         {
+            id: "select",
+            header: ({ table }) => (
+               <Checkbox
+                  checked={
+                     table.getIsAllPageRowsSelected() ||
+                     (table.getIsSomePageRowsSelected() && "indeterminate")
+                  }
+                  onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                  aria-label="Select all"
+               />
+            ),
+            cell: ({ row }) => (
+               <Checkbox
+                  checked={row.getIsSelected()}
+                  onCheckedChange={(value) => row.toggleSelected(!!value)}
+                  aria-label="Select row"
+               />
+            ),
+            enableSorting: false,
+            enableHiding: false,
+         },
          {
             accessorKey: "order_number",
             header: "Order",
@@ -214,16 +291,78 @@ export function OrdersContent() {
          {
             id: "actions",
             header: "",
-            cell: ({ row }) => (
-               <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/admin/orders/${row.original.id}`}>
-                     <Eye className="h-4 w-4" />
-                  </Link>
-               </Button>
-            ),
+            cell: ({ row }) => {
+               const order = row.original;
+               return (
+                  <DropdownMenu>
+                     <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                           <MoreHorizontal className="h-4 w-4" />
+                           <span className="sr-only">Open menu</span>
+                        </Button>
+                     </DropdownMenuTrigger>
+                     <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem asChild>
+                           <Link href={`/admin/orders/${order.id}`}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View details
+                           </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                        <DropdownMenuItem
+                           onClick={() => updateOrderStatus.mutate({ id: order.id, order_status: "processing" })}
+                           disabled={order.order_status === "processing"}
+                        >
+                           <Package className="mr-2 h-4 w-4" />
+                           Mark Processing
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                           onClick={() => updateOrderStatus.mutate({ id: order.id, order_status: "delivered" })}
+                           disabled={order.order_status === "delivered"}
+                        >
+                           <CheckCircle className="mr-2 h-4 w-4" />
+                           Mark Delivered
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                           onClick={() => updateOrderStatus.mutate({ id: order.id, order_status: "cancelled" })}
+                           disabled={order.order_status === "cancelled"}
+                        >
+                           <XCircle className="mr-2 h-4 w-4" />
+                           Mark Cancelled
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Payment</DropdownMenuLabel>
+                        <DropdownMenuItem
+                           onClick={() => updatePaymentStatus.mutate({ id: order.id, payment_status: "paid" })}
+                           disabled={order.payment_status === "paid"}
+                        >
+                           <DollarSign className="mr-2 h-4 w-4" />
+                           Mark Paid
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                           onClick={() => updatePaymentStatus.mutate({ id: order.id, payment_status: "unpaid" })}
+                           disabled={order.payment_status === "unpaid"}
+                        >
+                           <DollarSign className="mr-2 h-4 w-4" />
+                           Mark Unpaid
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                           className="text-destructive focus:text-destructive"
+                           onClick={() => deleteOrder.mutate(order.id)}
+                        >
+                           <Trash2 className="mr-2 h-4 w-4" />
+                           Delete Order
+                        </DropdownMenuItem>
+                     </DropdownMenuContent>
+                  </DropdownMenu>
+               );
+            },
          },
       ],
-      []
+      [updateOrderStatus, updatePaymentStatus, deleteOrder]
    );
 
    return (
@@ -295,7 +434,63 @@ export function OrdersContent() {
                      )}
                   </div>
                ) : (
-                  <DataTable columns={columns} data={filteredOrders} pageSize={10} />
+                  <DataTable
+                     columns={columns}
+                     data={filteredOrders}
+                     pageSize={10}
+                     enableRowSelection
+                     onRowSelectionChange={handleRowSelectionChange}
+                     bulkActionsToolbar={
+                        <>
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                 <Button variant="outline" size="sm">
+                                    <Package className="mr-2 h-4 w-4" />
+                                    Update Status
+                                 </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                 <DropdownMenuItem onClick={() => handleBulkStatusUpdate("processing")}>
+                                    <Package className="mr-2 h-4 w-4" />
+                                    Mark Processing
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem onClick={() => handleBulkStatusUpdate("delivered")}>
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    Mark Delivered
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem onClick={() => handleBulkStatusUpdate("cancelled")}>
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Mark Cancelled
+                                 </DropdownMenuItem>
+                              </DropdownMenuContent>
+                           </DropdownMenu>
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                 <Button variant="outline" size="sm">
+                                    <DollarSign className="mr-2 h-4 w-4" />
+                                    Update Payment
+                                 </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                 <DropdownMenuItem onClick={() => handleBulkPaymentUpdate("paid")}>
+                                    Mark Paid
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem onClick={() => handleBulkPaymentUpdate("unpaid")}>
+                                    Mark Unpaid
+                                 </DropdownMenuItem>
+                              </DropdownMenuContent>
+                           </DropdownMenu>
+                           <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={handleBulkDelete}
+                           >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                           </Button>
+                        </>
+                     }
+                  />
                )}
             </CardContent>
          </Card>
