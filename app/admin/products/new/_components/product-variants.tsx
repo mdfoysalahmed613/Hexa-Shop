@@ -120,14 +120,11 @@ export function ProductVariants({ control, errors }: ProductVariantsProps) {
                                  step="0.01"
                                  placeholder="0.00"
                                  {...field}
-                                 value={field.value ?? ""}
-                                 onChange={(e) =>
-                                    field.onChange(
-                                       e.target.value
-                                          ? parseFloat(e.target.value)
-                                          : 0
-                                    )
-                                 }
+                                 value={field.value === 0 ? "" : field.value}
+                                 onChange={(e) => {
+                                    const val = e.target.value;
+                                    field.onChange(val === "" ? 0 : parseFloat(val));
+                                 }}
                                  aria-invalid={fieldState.invalid}
                               />
                               {fieldState.invalid && (
@@ -152,14 +149,11 @@ export function ProductVariants({ control, errors }: ProductVariantsProps) {
                                  step="0.01"
                                  placeholder="0.00"
                                  {...field}
-                                 value={field.value ?? ""}
-                                 onChange={(e) =>
-                                    field.onChange(
-                                       e.target.value
-                                          ? parseFloat(e.target.value)
-                                          : null
-                                    )
-                                 }
+                                 value={field.value === 0 || field.value === null ? "" : field.value}
+                                 onChange={(e) => {
+                                    const val = e.target.value;
+                                    field.onChange(val === "" ? null : parseFloat(val));
+                                 }}
                                  aria-invalid={fieldState.invalid}
                               />
                               {fieldState.invalid && (
@@ -187,14 +181,11 @@ export function ProductVariants({ control, errors }: ProductVariantsProps) {
                                  step="1"
                                  placeholder="0"
                                  {...field}
-                                 value={field.value ?? ""}
-                                 onChange={(e) =>
-                                    field.onChange(
-                                       e.target.value
-                                          ? parseInt(e.target.value, 10)
-                                          : 0
-                                    )
-                                 }
+                                 value={field.value === 0 || field.value === null ? "" : field.value}
+                                 onChange={(e) => {
+                                    const val = e.target.value;
+                                    field.onChange(val === "" ? null : parseFloat(val));
+                                 }}
                                  aria-invalid={fieldState.invalid}
                               />
                               {fieldState.invalid && (
