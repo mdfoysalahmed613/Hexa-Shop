@@ -42,9 +42,6 @@ export function HeroSection() {
                            <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                      </Button>
-                     <Button size="lg" variant="outline" asChild>
-                        <Link href="/about">Learn More</Link>
-                     </Button>
                   </div>
                   {/* Stats */}
                   <div className="flex gap-8 pt-4">

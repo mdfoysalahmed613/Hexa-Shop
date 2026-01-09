@@ -4,11 +4,14 @@ import { DynamicBreadcrumb } from "@/app/admin/_components/dynamic-breadcrumb";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AppSidebar } from "./_components/app-sidebar";
+import { Suspense } from "react";
 
 const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
    return (
       <SidebarProvider>
-         <AppSidebar />
+         <Suspense fallback={null}>
+            <AppSidebar />
+         </Suspense>
          <SidebarInset >
             <header className="flex justify-between h-12 px-4 border-b">
                <div className="flex gap-2 items-center">

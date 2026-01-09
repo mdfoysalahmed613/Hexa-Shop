@@ -418,7 +418,7 @@ function ProductListItem({
                </div>
             )}
          </Link>
-         <div className="flex flex-1 flex-col">
+         <div className="flex  flex-col">
             <Link href={`/products/${product.slug}`}>
                <h3 className="font-semibold hover:text-primary transition-colors">
                   {product.name}

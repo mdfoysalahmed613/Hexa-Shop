@@ -210,19 +210,16 @@ export function ProductVariants({ control, errors }: ProductVariantsProps) {
                         render={({ field, fieldState }) => (
                            <Field data-invalid={fieldState.invalid}>
                               <FieldLabel htmlFor={`sku-${index}`}>
-                                 SKU
+                                 SKU <span className="text-destructive">*</span>
                               </FieldLabel>
                               <Input
                                  id={`sku-${index}`}
-                                 placeholder="Auto-generated if empty"
+                                 placeholder="Enter SKU (e.g. PROD-001)"
                                  {...field}
                                  value={field.value ?? ""}
-                                 onChange={(e) => field.onChange(e.target.value || null)}
+                                 onChange={(e) => field.onChange(e.target.value)}
                                  aria-invalid={fieldState.invalid}
                               />
-                              <FieldDescription className="text-xs">
-                                 Optional - will be auto-generated if left empty
-                              </FieldDescription>
                               {fieldState.invalid && (
                                  <FieldError errors={[fieldState.error]} />
                               )}

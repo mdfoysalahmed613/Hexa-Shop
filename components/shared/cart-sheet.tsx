@@ -71,9 +71,9 @@ export function CartSheet() {
                   <div className="flex-1 overflow-y-auto py-4">
                      <div className="space-y-4">
                         {items.map((item) => (
-                           <div key={item.id} className="flex gap-4">
+                           <div key={item.id} className="flex gap-4 px-3">
                               {/* Product Image */}
-                              <div className="relative h-20 w-20 overflow-hidden rounded-lg bg-muted flex-shrink-0">
+                              <div className="relative h-20 w-20 overflow-hidden rounded-lg bg-muted ">
                                  {item.image ? (
                                     <Image
                                        src={item.image}

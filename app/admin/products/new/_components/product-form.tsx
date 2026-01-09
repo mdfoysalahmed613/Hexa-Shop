@@ -67,7 +67,7 @@ export function ProductForm({ product }: { product?: Product }) {
                      compare_price: v.compare_price || null,
                      stock: v.stock,
                      is_active: v.is_active,
-                     sku: v.sku || null,
+                     sku: v.sku || "",
                      size: (v.size && VALID_SIZES.includes(v.size as ValidSize) ? v.size : null) as ValidSize | null,
                      color: v.color || null,
                   }))

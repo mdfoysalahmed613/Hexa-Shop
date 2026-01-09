@@ -21,8 +21,8 @@ export const variantFormSchema = z.object({
     .int("Stock must be a whole number")
     .min(0, "Stock cannot be negative"),
   is_active: z.boolean(),
-  // SKU (optional - auto-generated if empty)
-  sku: z.string().max(100, "SKU too long").optional().nullable(),
+  // SKU (required)
+  sku: z.string().min(1, "SKU is required").max(100, "SKU too long"),
   // Size (optional - must be one of: S, M, L, XL, XXL)
   size: z.enum(VALID_SIZES).optional().nullable(),
   // Color (optional)
@@ -103,7 +103,7 @@ export const defaultVariant: VariantFormData = {
   compare_price: null,
   stock: 0,
   is_active: true,
-  sku: null,
+  sku: "",
   size: null,
   color: null,
 };

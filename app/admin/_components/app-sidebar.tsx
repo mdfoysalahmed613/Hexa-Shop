@@ -28,7 +28,7 @@ import {
   Hexagon,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import {
   Sidebar,
@@ -83,24 +83,19 @@ const mainNavItems = [
     icon: Users,
     href: "/admin/customers",
   },
-  {
-    title: "Analytics",
-    icon: BarChart3,
-    href: "/admin/analytics",
-  },
+  // {
+  //   title: "Analytics",
+  //   icon: BarChart3,
+  //   href: "/admin/analytics",
+  // },
 ];
 
 const settingsNavItems = [
-  {
-    title: "Shipping",
-    icon: Truck,
-    href: "/admin/settings/shipping",
-  },
-  {
-    title: "Discounts",
-    icon: Tag,
-    href: "/admin/settings/discounts",
-  },
+  // {
+  //   title: "Discounts",
+  //   icon: Tag,
+  //   href: "/admin/settings/discounts",
+  // },
   {
     title: "Settings",
     icon: Settings,
@@ -110,6 +105,23 @@ const settingsNavItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Build current URL with search params for accurate comparison
+  const currentUrl = searchParams.toString()
+    ? `${pathname}?${searchParams.toString()}`
+    : pathname;
+
+  // Helper to check if a menu item is active
+  const isActiveLink = (href: string) => {
+    // For links with query params, compare full URL
+    if (href.includes("?")) {
+      return currentUrl === href;
+    }
+    // For links without query params, only match if current URL also has no params
+    // This prevents "/admin/orders" from matching when we're at "/admin/orders?status=pending"
+    return pathname === href && !searchParams.toString();
+  };
 
   return (
     <Sidebar variant="inset" collapsible="icon" >
@@ -140,7 +152,7 @@ export function AppSidebar() {
                   >
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
-                        <SidebarMenuButton isActive={pathname === item.href}>
+                        <SidebarMenuButton>
                           {item.icon && <item.icon />}
                           <span>{item.title}</span>
                           <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -152,7 +164,7 @@ export function AppSidebar() {
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton
                                 asChild
-                                isActive={pathname === subItem.href}
+                                isActive={isActiveLink(subItem.href)}
                               >
                                 <Link href={subItem.href}>
                                   {subItem.title}
@@ -168,7 +180,7 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.href}
+                      isActive={isActiveLink(item.href)}
                     >
                       <Link href={item.href}>
                         <item.icon className="h-4 w-4" />
@@ -190,7 +202,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={isActiveLink(item.href)}
                   >
                     <Link href={item.href}>
                       <item.icon className="h-4 w-4" />

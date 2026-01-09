@@ -240,8 +240,9 @@ export default function ProductPage({ params }: ProductPageProps) {
                   )}
 
                   {/* Quantity & Add to Cart */}
-                  <div className="flex flex-col sm:flex-row gap-4">
-                     <div className="flex items-center border rounded-md">
+                  <div className="flex flex-col gap-4">
+                     {/* Quantity selector - centered on mobile */}
+                     <div className="flex items-center justify-center sm:justify-start border rounded-md w-fit mx-auto sm:mx-0">
                         <Button
                            variant="ghost"
                            size="icon"
@@ -260,25 +261,28 @@ export default function ProductPage({ params }: ProductPageProps) {
                            <Plus className="h-4 w-4" />
                         </Button>
                      </div>
-                     <Button
-                        size="lg"
-                        className="flex-1"
-                        disabled={isOutOfStock}
-                        onClick={handleAddToCart}
-                     >
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        {isOutOfStock ? "Out of Stock" : "Add to Cart"}
-                     </Button>
-                     <Button
-                        size="lg"
-                        variant="secondary"
-                        className="flex-1"
-                        disabled={isOutOfStock}
-                        onClick={handleBuyNow}
-                     >
-                        <Zap className="mr-2 h-5 w-5" />
-                        Buy Now
-                     </Button>
+                     {/* Action buttons - stack on mobile, row on larger screens */}
+                     <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                           size="lg"
+                           className="w-full sm:flex-1"
+                           disabled={isOutOfStock}
+                           onClick={handleAddToCart}
+                        >
+                           <ShoppingCart className="mr-2 h-5 w-5" />
+                           {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+                        </Button>
+                        <Button
+                           size="lg"
+                           variant="secondary"
+                           className="w-full sm:flex-1"
+                           disabled={isOutOfStock}
+                           onClick={handleBuyNow}
+                        >
+                           <Zap className="mr-2 h-5 w-5" />
+                           Buy Now
+                        </Button>
+                     </div>
                   </div>
 
                   {cartQuantity > 0 && (

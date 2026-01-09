@@ -26,7 +26,6 @@ import {
    CheckCircle,
    XCircle,
    DollarSign,
-   Loader2,
    RefreshCw,
    Search,
    MoreHorizontal,
@@ -36,6 +35,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
    DropdownMenu,
@@ -463,8 +463,22 @@ export function OrdersContent() {
          <Card>
             <CardContent>
                {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <div className="space-y-4">
+                     {[...Array(5)].map((_, i) => (
+                        <div
+                           key={i}
+                           className="flex items-center justify-between rounded-lg border p-4"
+                        >
+                           <div className="flex items-center gap-4">
+                              <Skeleton className="h-5 w-5 rounded" />
+                              <div className="space-y-2">
+                                 <Skeleton className="h-4 w-32" />
+                                 <Skeleton className="h-3 w-24" />
+                              </div>
+                           </div>
+                           <Skeleton className="h-6 w-20" />
+                        </div>
+                     ))}
                   </div>
                ) : filteredOrders.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">

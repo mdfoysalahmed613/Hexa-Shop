@@ -215,18 +215,18 @@ export function Navbar() {
                {searchOpen && (
                   <div ref={mobileSearchRef} className="relative flex-1 md:hidden">
                      <form onSubmit={handleSearchSubmit}>
-                        <div className="relative w-full">
-                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                           <Input
-                              type="search"
-                              placeholder="Search products..."
-                              className="w-full pl-9 pr-4"
+                        <InputGroup>
+                           <InputGroupInput
                               value={searchQuery}
+                              placeholder="Search products..."
                               onChange={(e) => handleSearchChange(e.target.value)}
                               onFocus={handleSearchFocus}
                               autoFocus
                            />
-                        </div>
+                           <InputGroupAddon>
+                              <Search />
+                           </InputGroupAddon>
+                        </InputGroup>
                      </form>
                      <SearchResultsDropdown
                         showResults={showResults}

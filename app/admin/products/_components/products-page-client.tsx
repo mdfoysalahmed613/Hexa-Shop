@@ -122,7 +122,7 @@ const defaultFilters: ProductFilters = {
    category: "all",
    status: "all",
    stockStatus: "all",
-   priceRange: [0, 10000],
+   priceRange: [0, 100],
 };
 
 export function ProductsPageClient() {
@@ -137,9 +137,9 @@ export function ProductsPageClient() {
 
    // Calculate max price for slider
    const maxPrice = useMemo(() => {
-      if (products.length === 0) return 10000;
+      if (products.length === 0) return 100;
       const prices = products.flatMap(p => p.variants?.map(v => v.price) ?? []);
-      return Math.max(...prices, 10000);
+      return Math.max(...prices, 100);
    }, [products]);
 
    // Filter products based on all filters
