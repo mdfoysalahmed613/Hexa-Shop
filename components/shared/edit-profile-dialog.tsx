@@ -32,7 +32,8 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import Image from "next/image";
 import { DefaultAvatar } from "@/assets/common";
-import { Trash2, Upload, UserIcon } from "lucide-react";
+import { Camera, Trash2, Upload, UserIcon } from "lucide-react";
+import { WebcamCaptureDialog } from "@/components/shared/webcam-capture-dialog";
 
 interface FormData {
    fullName: string;
@@ -50,6 +51,7 @@ export function EditProfileDialog({ user }: { user: User | null }) {
       avatarUrl: "",
    });
    const fileInputRef = useRef<HTMLInputElement>(null);
+   const [isWebcamOpen, setIsWebcamOpen] = useState(false);
 
    // Initialize form data from user metadata
    useEffect(() => {
@@ -188,6 +190,63 @@ export function EditProfileDialog({ user }: { user: User | null }) {
       }
    };
 
+   const handleWebcamCapture = async (blob: Blob) => {
+      if (!user) return;
+
+      const oldAvatarUrl = formData.avatarUrl;
+      const previewUrl = URL.createObjectURL(blob);
+      setFormData((prev) => ({ ...prev, avatarUrl: previewUrl }));
+      setIsUploading(true);
+
+      try {
+         const supabase = createClient();
+         const fileName = `avatar-${Date.now()}.jpg`;
+         const filePath = `${user.id}/${fileName}`;
+
+         // Delete old avatar if exists
+         if (oldAvatarUrl && oldAvatarUrl.includes(user.id)) {
+            const urlParts = oldAvatarUrl.split("/");
+            const oldFileName = urlParts[urlParts.length - 1];
+            if (oldFileName) {
+               await supabase.storage.from("avatar").remove([`${user.id}/${oldFileName}`]);
+            }
+         }
+
+         // Upload captured photo
+         const file = new File([blob], fileName, { type: "image/jpeg" });
+         const { error: uploadError } = await supabase.storage
+            .from("avatar")
+            .upload(filePath, file);
+
+         if (uploadError) throw uploadError;
+
+         // Get public URL
+         const { data: urlData } = supabase.storage
+            .from("avatar")
+            .getPublicUrl(filePath);
+
+         // Update user metadata immediately
+         const { error: updateError } = await supabase.auth.updateUser({
+            data: { avatar_url: urlData.publicUrl },
+         });
+
+         if (updateError) throw updateError;
+
+         URL.revokeObjectURL(previewUrl);
+         setFormData((prev) => ({ ...prev, avatarUrl: urlData.publicUrl }));
+         toast.success("Photo captured and uploaded successfully");
+      } catch (error) {
+         console.error(error);
+         URL.revokeObjectURL(previewUrl);
+         setFormData((prev) => ({ ...prev, avatarUrl: oldAvatarUrl }));
+         toast.error(
+            error instanceof Error ? error.message : "Failed to upload photo"
+         );
+      } finally {
+         setIsUploading(false);
+      }
+   };
+
    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!user) return;
@@ -286,6 +345,16 @@ export function EditProfileDialog({ user }: { user: User | null }) {
                               <Upload className="w-4 h-4 mr-2" />
                               {formData.avatarUrl ? "Change" : "Upload"}
                            </Button>
+                           <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={isUploading}
+                              onClick={() => setIsWebcamOpen(true)}
+                           >
+                              <Camera className="w-4 h-4 mr-2" />
+                              Capture
+                           </Button>
                            {formData.avatarUrl && (
                               <Button
                                  type="button"
@@ -357,6 +426,11 @@ export function EditProfileDialog({ user }: { user: User | null }) {
                </form>
             </DialogContent>
          </Dialog>
+         <WebcamCaptureDialog
+            open={isWebcamOpen}
+            onOpenChange={setIsWebcamOpen}
+            onCapture={handleWebcamCapture}
+         />
       </>
    );
 }
